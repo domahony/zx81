@@ -1123,6 +1123,7 @@ sub cbKeyPressed
 {
   my $key = shift;
   my $c = uc chr $key;
+	print "$c\n";
   if ($key == 27 or $c eq 'Q')
   {
     ourCleanup();

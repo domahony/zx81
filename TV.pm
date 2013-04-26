@@ -72,6 +72,7 @@ new
 	glutCreateWindow("BLAH");
 
 	glutDisplayFunc(sub {$ret->render();});
+	glutKeyboardFunc(sub {$ret->keyboard();});
 	glutIdleFunc($fn);
 
 	$ret->ourInit($width, $height);
@@ -143,6 +144,18 @@ add_pixel
 		$x+$pw, $y;
 
 	$self->{VERTS}->assign(0, @{$self->{DATA}});
+}
+
+sub
+keyboard
+{
+	my $self = shift;
+
+	my $key = shift;
+
+	my $c = uc chr $key;
+
+	print "KEYBOARD $self '$key' '$c'" . "\n";
 }
 
 sub
