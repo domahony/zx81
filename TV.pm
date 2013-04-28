@@ -139,10 +139,11 @@ render
 	print "Render!!\n";
 	$self->{SHADER}->Enable();
 
-	$self->{VERTS} = OpenGL::Array->new_list(GL_SHORT, @{$self->{DATA}});
+	#$self->{VERTS} = OpenGL::Array->new_list(GL_SHORT, @{$self->{DATA}});
 	#$self->{VERTS} = OpenGL::Array->new_list(GL_SHORT, 10,500);
-	$self->{VERTS}->bind($self->{VID});
-	glBufferDataARB_p(GL_ARRAY_BUFFER_ARB, $self->{VERTS}, GL_DYNAMIC_DRAW);
+	#$self->{VERTS}->bind($self->{VID});
+
+	glBufferSubDataARB_p(GL_ARRAY_BUFFER_ARB, 0, $self->{VERTS});
 	glVertexPointer_p(2, $self->{VERTS});
 
 	glClearColor(0,0,0,0);
@@ -188,7 +189,7 @@ sub ourInit
 	$self->{SHADER} = $shader;
 	$self->{VID} = $vid;
 
-	$self->{VERTS} = OpenGL::Array->new_list(GL_SHORT, @{$self->{DATA}});
+	$self->{VERTS} = OpenGL::Array->new($Width * $Height * 8, (GL_SHORT));
 	$self->{VERTS}->bind($self->{VID});
 	glBufferDataARB_p(GL_ARRAY_BUFFER_ARB, $self->{VERTS}, GL_DYNAMIC_DRAW);
 	glVertexPointer_c(2, GL_SHORT, 0, 0);
