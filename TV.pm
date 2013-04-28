@@ -60,7 +60,7 @@ new
 	my $height = (24 + 4 + 4) * 8 * $ret->{PH};
 
 	glutInitWindowSize($width, $height);
-	glutCreateWindow("BLAH");
+	glutCreateWindow("ZX81");
 	$ret->ourInit($width, $height);
 
 	return $ret;
@@ -74,8 +74,8 @@ horiz
 	$self->{X} = 0;
 
 	if (defined $self->{RENDER}) {
-			$self->{RENDER} = undef;
-			glutPostRedisplay();
+		$self->{RENDER} = undef;
+		glutPostRedisplay();
 	}
 }
 
