@@ -52,8 +52,6 @@ sub
 new 
 {
 	my $class = shift;
-	my $fn = shift;
-
 	my $self = {%TV};
 
 	my $ret = bless $self, $class;
@@ -61,20 +59,8 @@ new
 	my $width = 32 * 8 * $ret->{PW};
 	my $height = (24 + 4 + 4) * 8 * $ret->{PH};
 
-	glutInit();
-	#glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH | GLUT_ALPHA);
 	glutInitWindowSize($width, $height);
-
-	# Open a window
-	if (!glutGet(GLUT_DISPLAY_MODE_POSSIBLE)) {
-		exit;
-	}
 	glutCreateWindow("BLAH");
-
-	glutDisplayFunc(sub {$ret->render();});
-	glutKeyboardFunc(sub {$ret->keyboard();});
-	glutIdleFunc($fn);
-
 	$ret->ourInit($width, $height);
 
 	return $ret;
@@ -147,18 +133,6 @@ add_pixel
 }
 
 sub
-keyboard
-{
-	my $self = shift;
-
-	my $key = shift;
-
-	my $c = uc chr $key;
-
-	print "KEYBOARD $self '$key' '$c'" . "\n";
-}
-
-sub
 render
 {
 	my $self = shift;
@@ -183,13 +157,6 @@ render
 
 	glutSwapBuffers();
 	$self->{SHADER}->Disable();
-}
-
-sub
-start
-{
-	print "Hello!!\n";
-	glutMainLoop();
 }
 
 sub
