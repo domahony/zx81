@@ -1,6 +1,5 @@
 #!/usr/bin/perl -w
 
-#problem prior to L0940.... BC is zero when this is called causes the loop to go for FF iterations
 package ZX81;
 
 use strict;
