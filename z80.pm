@@ -372,7 +372,7 @@ run {
 			$self->execute($opcode);
 		}
 
-		if (0) {
+		if (1 || ($self->{PC} >= 0x02BB && $self->{PC} < 0x02e7))  {
 			my $op = $self->{OP}->to_string($self->{tick_count}, $self->{R});
 			print "$op\n";
 			$self->show_mem();
@@ -653,6 +653,7 @@ execute
 	if (!defined(&{$fn})) {
 		$self->{tickfn}->("DUMP_RAM");
 		print "BBBBBBBB\n";
+		$self->show_mem();
 	}
 
 	$self->{OP}->mnemonic($o->{$opcode}[1]);
@@ -956,6 +957,8 @@ calculate_sub_flags
         $MASK = ($MASK << 1) | 0x1;
     }
 
+	print "MASK $MASK\n";
+
 	
 	if (!looks_like_number($b)) {
 		$self->show_mem();
@@ -969,11 +972,11 @@ calculate_sub_flags
 		exit;
 	}
 
-    $self->{F} = ($self->{F} ^ $CMASK) & $MASK;
-    $self->calculate_add_flags($a, ~(0+$b) & $MASK, $use_carry, $WIDTH);
-    $self->{F} = ($self->{F} ^ $CMASK) & $MASK;
+    	$self->{F} = ($self->{F} ^ $CMASK) & 0xFF;
+    	$self->calculate_add_flags($a, ~(0+$b) & $MASK, 1 - $use_carry, $WIDTH);
+    	$self->{F} = ($self->{F} ^ $CMASK) & 0xFF;
 
-	my $res = $a - $b;
+	my $res = $a - $b - $use_carry;
 
 	if ($res == 0) {
 		$self->flag("Z", 1);
@@ -1491,9 +1494,9 @@ sub
 CP_N
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $n = $self->next_pc();
+	my $n = $self->next_pc();
 
 	$self->calculate_sub_flags($self->{A}, $n, 0, 8);
 }

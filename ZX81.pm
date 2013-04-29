@@ -76,7 +76,7 @@ new
 	my $kb = new Keyboard();
 
 	glutDisplayFunc(sub {$tv->render();});
-	glutKeyboardFunc(sub {$kb->keyboard();});
+	glutKeyboardFunc(sub {$kb->keyboard(@_);});
 	glutIdleFunc(sub {$cpu->run();});
 
 	$ret->{CPU} = $cpu;
@@ -363,7 +363,8 @@ tick1
 			$self->{LINECNTR} = 0;
 
 			$cpu->DATA_BUS(
-				$self->get_keyboard_output(($cpu->ADDRESS_BUS >> 8) & 0xFF)
+				$self->get_keyboard_output(
+					($cpu->ADDRESS_BUS >> 8) & 0xFF)
 			);
 
 		} 
@@ -399,12 +400,13 @@ tick1
 sub
 get_keyboard_output
 {
+	my $self = shift;
 	my $keyboard_row = shift;
 	my $ret = 0;
 	$ret |= (get_cassette_input() << 7);
 	$ret |= (get_display_refresh() << 6);
 	$ret |= (1 << 5);
-	$ret |= read_keyboard_row($keyboard_row);
+	$ret |= $self->read_keyboard_row($keyboard_row);
 	return $ret;
 
 }
@@ -424,14 +426,15 @@ get_display_refresh
 sub
 read_keyboard_row
 {
+	my $self = shift;
 	my $row = shift;
-	my $ret = 0x1F;
 
-	if (0 && $row == 0xFB) {
-		$ret &= ((~(0x1 << 1)) & 0x1F); 
-	}
+	my $ret = $self->{KEY}->{$row};
 
-	print "Executing Keyboard Row: " . sprintf("0x%02x", $ret) . "\n";
+	print "Executing Keyboard Row: " . 
+		 sprintf("0x%02x", $row) . " " .
+		sprintf("0x%02x", $ret) . 
+	"\n";
 
 	return $ret;
 }
@@ -458,6 +461,7 @@ init_vertical_retrace
 		print "START_VERT_RT\n";
 		$self->{VERTICAL_RETRACE} = 1;
 		$self->{count} = 0;
+		$self->{KEY} = $self->{KEYBOARD}->next_key();
 	}
 }
 

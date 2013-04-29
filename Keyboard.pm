@@ -3,52 +3,53 @@
 package Keyboard;
 
 use strict;
+use OpenGL qw/ glutGetModifiers GLUT_ACTIVE_SHIFT /;
 
 my %KEYS = (
-	"SHIFT" => 	[0,0, 0xFEFE],
-	"A" => 		[1,0, 0xFDFE],
-	"Q" => 		[2,0, 0xFBFE],
-	"1" => 		[3,0, 0xF7FE],
-	"0" => 		[4,0, 0xEFFE],
-	"P" => 		[5,0, 0xDFFE],
-	"ENTER" => 	[6,0, 0xBFFE],
-	" " => 		[7,0, 0x7FFE],
+	"SHIFT" => 	[0,0, 0xFE],
+	"A" => 		[1,0, 0xFD],
+	"Q" => 		[2,0, 0xFB],
+	"1" => 		[3,0, 0xF7],
+	"0" => 		[4,0, 0xEF],
+	"P" => 		[5,0, 0xDF],
+	"ENTER" => 	[6,0, 0xBF],
+	" " => 		[7,0, 0x7F],
 
-	"Z" => 		[0,1, 0xFEFE],
-	"S" => 		[1,1, 0xFDFE],
-	"W" => 		[2,1, 0xFBFE],
-	"2" => 		[3,1, 0xF7FE],
-	"9" => 		[4,1, 0xEFFE],
-	"O" => 		[5,1, 0xDFFE],
-	"L" => 		[6,1, 0xBFFE],
-	"." => 		[7,1, 0x7FFE],
+	"Z" => 		[0,1, 0xFE],
+	"S" => 		[1,1, 0xFD],
+	"W" => 		[2,1, 0xFB],
+	"2" => 		[3,1, 0xF7],
+	"9" => 		[4,1, 0xEF],
+	"O" => 		[5,1, 0xDF],
+	"L" => 		[6,1, 0xBF],
+	"." => 		[7,1, 0x7F],
 
-	"X" => 		[0,2, 0xFEFE],
-	"D" => 		[1,2, 0xFDFE],
-	"E" => 		[2,2, 0xFBFE],
-	"3" => 		[3,2, 0xF7FE],
-	"8" => 		[4,2, 0xEFFE],
-	"I" => 		[5,2, 0xDFFE],
-	"K" => 		[6,2, 0xBFFE],
-	"M" => 		[7,2, 0x7FFE],
+	"X" => 		[0,2, 0xFE],
+	"D" => 		[1,2, 0xFD],
+	"E" => 		[2,2, 0xFB],
+	"3" => 		[3,2, 0xF7],
+	"8" => 		[4,2, 0xEF],
+	"I" => 		[5,2, 0xDF],
+	"K" => 		[6,2, 0xBF],
+	"M" => 		[7,2, 0x7F],
 
-	"C" => 		[0,3, 0xFEFE],
-	"F" => 		[1,3, 0xFDFE],
-	"R" => 		[2,3, 0xFBFE],
-	"4" => 		[3,3, 0xF7FE],
-	"7" => 		[4,3, 0xEFFE],
-	"U" => 		[5,3, 0xDFFE],
-	"J" => 		[6,3, 0xBFFE],
-	"N" => 		[7,3, 0x7FFE],
+	"C" => 		[0,3, 0xFE],
+	"F" => 		[1,3, 0xFD],
+	"R" => 		[2,3, 0xFB],
+	"4" => 		[3,3, 0xF7],
+	"7" => 		[4,3, 0xEF],
+	"U" => 		[5,3, 0xDF],
+	"J" => 		[6,3, 0xBF],
+	"N" => 		[7,3, 0x7F],
 
-	"V" => 		[0,4, 0xFEFE],
-	"G" => 		[1,4, 0xFDFE],
-	"T" => 		[2,4, 0xFBFE],
-	"5" => 		[3,4, 0xF7FE],
-	"6" => 		[4,4, 0xEFFE],
-	"Y" => 		[5,4, 0xDFFE],
-	"H" => 		[6,4, 0xBFFE],
-	"B" => 		[7,4, 0x7FFE],
+	"V" => 		[0,4, 0xFE],
+	"G" => 		[1,4, 0xFD],
+	"T" => 		[2,4, 0xFB],
+	"5" => 		[3,4, 0xF7],
+	"6" => 		[4,4, 0xEF],
+	"Y" => 		[5,4, 0xDF],
+	"H" => 		[6,4, 0xBF],
+	"B" => 		[7,4, 0x7F],
 );
 
 my @KEYBOARD_ROW = (
@@ -63,6 +64,7 @@ my @KEYBOARD_ROW = (
 );
 
 my %KB = (
+	BUFFER => [],
 );
 
 sub
@@ -72,6 +74,61 @@ new
 	my $self = {%KB};
 
 	return bless $self, $class;
+}
+
+sub
+keyboard
+{
+	my $self = shift;
+	my ($c, $x, $y) = @_;
+
+	my $char = uc chr $c;
+
+	print "KEYBOARD $char\n";
+	if (!defined $KEYS{$char}) {
+		return;
+	}
+	my $key = $KEYS{$char};
+
+	my %key = (
+		0xFE => 0x1F,
+		0xFD => 0x1F,
+		0xFB => 0x1F,
+		0xF7 => 0x1F,
+		0xEF => 0x1F,
+		0xDF => 0x1F,
+		0xBF => 0x1F,
+		0x7F => 0x1F,
+	);
+
+	$key{${$key}[2]} &= ((~(0x1 << ${$key}[1])) & 0x1F);
+ 
+	my $mod = glutGetModifiers();
+
+	if ($mod & GLUT_ACTIVE_SHIFT) {
+		my $shift = $KEYS{SHIFT};
+		$key{${$shift}[2]} &= ((~(0x1 << ${$shift}[1])) & 0x1F);
+	} 
+
+	foreach (keys %key) {
+		print 
+			sprintf("0x%02x", $_) . 
+			" " .	
+			sprintf("0x%02x", $key{$_}) . 
+			"\n";
+	} 
+
+	push @{$self->{BUFFER}}, {%key};
+}
+
+sub
+next_key
+{
+	my $self = shift;
+
+	my $ret = shift @{$self->{BUFFER}};
+
+	return $ret;
 }
 
 1;
