@@ -9,17 +9,31 @@ my $ZMASK = 0x40;
 my $SMASK = 0x80;
 
 my $t = new TEST;
+$t->flag("C", 1);
+$t->print;
+$t->calculate_sub_flags($ARGV[0], $ARGV[1], $t->flag("C"), 8);
+$t->print;
 
+sub
+print
+{
+	my $self = shift;
 
-$t->calculate_add_flags(6, 3, 0, 8);
+	foreach ("C","H","PV","N","Z","S") {
+		my $f = $_;
+		my $v = $self->flag($f);
+
+		print "$f: $v\n";
+	}
+	print "\n";
+}
 
 sub
 new
 {
 	my $class = shift;
 
-	my $self = {};
-
+	my $self = {F => 0x0};
 	return bless $self, $class;
 }
 
@@ -77,19 +91,91 @@ flag
 	my $arg = shift;
 	my $val = shift;
 
+	my $ret;
+	my $mask;
+
 	if ($arg eq "C") {
+		$mask = $CMASK;
 	}
 	if ($arg eq "H") {
+		$mask = $HMASK;
 	}
 	if ($arg eq "PV") {
+		$mask = $PVMASK;
 	}
 	if ($arg eq "N") {
+		$mask = $NMASK;
 	}
 	if ($arg eq "Z") {
+		$mask = $ZMASK;
 	}
 	if ($arg eq "S") {
+		$mask = $SMASK;
 	}
 
+	$ret = ($self->{F} & $mask) != 0 ? 1 : 0;
 
-	$self->{$arg} = $val;
+	if (defined $val) {
+		if ($val == 1) {
+			$self->{F} |= $mask;
+		} else {
+			$self->{F} &= ((~$mask) & 0xFF);
+		}
+	}
+
+	return $ret;
+}
+
+sub
+calculate_sub_flags
+{
+    my ($self, $a, $b, $use_carry, $WIDTH) = @_;
+
+	exit unless defined $b;
+
+    my $MASK = 0;
+    for (1 .. $WIDTH) {
+        $MASK = ($MASK << 1) | 0x1;
+    }
+
+	print "MASK $MASK\n";
+
+	
+	if (!looks_like_number($b)) {
+		$self->show_mem();
+		print "$b is not a number!!\n";
+		exit;
+	}
+	if (!looks_like_number(~(0+$b))) {
+		$self->show_mem();
+		my $str = sprintf("%04x", ~(0+$b));
+		print "$str is not a number ($b)!!\n";
+		exit;
+	}
+
+    	$self->{F} = ($self->{F} ^ $CMASK) & 0xFF;
+    	$self->calculate_add_flags($a, ~(0+$b) & $MASK, 1 - $use_carry, $WIDTH);
+    	$self->{F} = ($self->{F} ^ $CMASK) & 0xFF;
+
+	my $res = $a - $b - $use_carry;
+
+	if ($res == 0) {
+		$self->flag("Z", 1);
+	} else {
+		$self->flag("Z", 0);
+	}
+
+	if ($res < 0) {
+		$self->flag("S", 1);
+	} else {
+		$self->flag("S", 0);
+	}
+
+	$self->flag("N", 1);
+}
+
+sub
+looks_like_number
+{
+	return 1;
 }
