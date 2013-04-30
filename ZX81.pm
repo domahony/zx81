@@ -1,5 +1,7 @@
 #!/usr/bin/perl -w
 
+# the display2 method routine (L023E) should exit at the RET Z line if there was a key pressed (I think)
+
 package ZX81;
 
 use strict;
