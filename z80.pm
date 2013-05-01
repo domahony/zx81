@@ -360,27 +360,23 @@ run {
 
 	my $self = shift;
 
-	if (1) {
-	#while (1) {
 
-		$self->{OP} = new op($self);
+	$self->{OP} = new op($self);
 
-		my $handled = $self->handle_interrupt();
-		if (!defined $handled) {
-			my $opcode = $self->opcode_fetch();
-			$self->{OP}->code($opcode);
-			$self->execute($opcode);
-		}
-
-		if (1 || ($self->{PC} >= 0x02BB && $self->{PC} < 0x02e7))  {
-			my $op = $self->{OP}->to_string($self->{tick_count}, $self->{R});
-			print "$op\n";
-			$self->show_mem();
-		}
-	
-		$self->int_delay();
-
+	my $handled = $self->handle_interrupt();
+	if (!defined $handled) {
+		my $opcode = $self->opcode_fetch();
+		$self->{OP}->code($opcode);
+		$self->execute($opcode);
 	}
+
+	if (1 || ($self->{PC} >= 0x02BB && $self->{PC} < 0x02e7))  {
+		my $op = $self->{OP}->to_string($self->{tick_count}, $self->{R});
+		print "$op\n";
+		$self->show_mem();
+	}
+
+	$self->int_delay();
 }
 
 
@@ -972,7 +968,7 @@ calculate_sub_flags
 		exit;
 	}
 
-	my $res = $a - $b - $self->{F};
+	my $res = $a - $b - $self->flag("C");
     	$self->{F} = ($self->{F} ^ $CMASK) & 0xFF;
     	$self->calculate_add_flags($a, ~(0+$b) & $MASK, $WIDTH);
     	$self->{F} = ($self->{F} ^ $CMASK) & 0xFF;
