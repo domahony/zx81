@@ -6,7 +6,7 @@
 package ZX81;
 
 use strict;
-use z80;
+use Z80;
 use TV;
 use Keyboard;
 use OpenGL qw / :all /; 
@@ -64,7 +64,7 @@ new
 
 	glutInit();
 
-	my $cpu = z80->new(sub {$ret->tick();});
+	my $cpu = Z80->new(sub {$ret->tick();});
 
 	my @PROG = unpack("(C)*", $rom);
 
