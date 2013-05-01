@@ -948,7 +948,7 @@ calculate_add_flags_1
 sub
 calculate_sub_flags
 {
-    my ($self, $a, $b, $use_carry, $WIDTH) = @_;
+    my ($self, $a, $b, $WIDTH) = @_;
 
 	exit unless defined $b;
 
@@ -972,11 +972,10 @@ calculate_sub_flags
 		exit;
 	}
 
+	my $res = $a - $b - $self->{F};
     	$self->{F} = ($self->{F} ^ $CMASK) & 0xFF;
-    	$self->calculate_add_flags($a, ~(0+$b) & $MASK, 1 - $use_carry, $WIDTH);
+    	$self->calculate_add_flags($a, ~(0+$b) & $MASK, $WIDTH);
     	$self->{F} = ($self->{F} ^ $CMASK) & 0xFF;
-
-	my $res = $a - $b - $use_carry;
 
 	if ($res == 0) {
 		$self->flag("Z", 1);
@@ -996,7 +995,7 @@ calculate_sub_flags
 sub
 calculate_add_flags
 {
-    my ($self, $a, $b, $use_carry, $WIDTH) = @_;
+    my ($self, $a, $b, $WIDTH) = @_;
     my $res;
     my $carry = 0;
 
@@ -1007,7 +1006,7 @@ calculate_add_flags
 
 	#print sprintf("MASK: %04x\n", $MASK);
 
-    if ($use_carry && ($self->{F} & $CMASK)) {
+    if ($self->{F} & $CMASK) {
         $carry = 1 if ($a >= $MASK - $b);
         $res = $a + $b + 1;
     } else {
@@ -1374,7 +1373,8 @@ DEC8
     my $orig = ${$self->REG($r)};
 
     my $ret = (${$self->REG($r)} - 1) & 0xFF;
-    $self->calculate_sub_flags(${$self->REG($r)}, 1, 0, 8);
+    $self->flag("C", 0);
+    $self->calculate_sub_flags(${$self->REG($r)}, 1, 8);
 
 	${$self->REG($r)} = $ret;
 
@@ -1391,7 +1391,8 @@ DEC_pHLp
     my ($hl) = get_value($self->{L}, $self->{H});
 
 	my $val = $self->mem_read($hl);
-	$self->calculate_sub_flags($val, 1, 0, 8);
+    	$self->flag("C", 0);
+	$self->calculate_sub_flags($val, 1, 8);
 
     if ($val == 0x80) {
     	$self->flag("PV", 1);
@@ -1411,7 +1412,8 @@ DEC_IYd
     my $offset = unpack('c', pack('C', $self->next_pc()));
 
 	my $val = $self->mem_read($self->{IY} + $offset);
-	$self->calculate_sub_flags($val, 1, 0, 8);
+    	$self->flag("C", 0);
+	$self->calculate_sub_flags($val, 1, 8);
 	$self->tick(2);
 
     if ($val == 0x80) {
@@ -1454,7 +1456,8 @@ INC_R
 
 	my $r = ($opcode >> 3) & 0x7;
 
-	$self->calculate_add_flags(${$self->REG($r)}, 1, 0, 8);
+	$self->flag("C", 0);
+	$self->calculate_add_flags(${$self->REG($r)}, 1, 8);
 
 	${$self->REG($r)} = ${$self->REG($r)} + 1;
 }
@@ -1487,7 +1490,8 @@ CP_S
 
     my $s = $opcode & 0x7;
 
-	$self->calculate_sub_flags($self->{A}, ${$self->REG($s)}, 0, 8);
+    	$self->flag("C", 0);
+	$self->calculate_sub_flags($self->{A}, ${$self->REG($s)}, 8);
 }
 
 sub
@@ -1498,7 +1502,8 @@ CP_N
 
 	my $n = $self->next_pc();
 
-	$self->calculate_sub_flags($self->{A}, $n, 0, 8);
+    	$self->flag("C", 0);
+	$self->calculate_sub_flags($self->{A}, $n, 8);
 }
 
 sub
@@ -1509,7 +1514,8 @@ CP_HL
 	my $hl = get_value($self->{L}, $self->{H});
 	my $value = $self->mem_read($hl);
 
-	$self->calculate_sub_flags($self->{A}, $value, 0, 8);
+    	$self->flag("C", 0);
+	$self->calculate_sub_flags($self->{A}, $value, 8);
 }
 
 
@@ -1522,7 +1528,8 @@ CP_IYd
 	$self->tick(5);
 	my $val = $self->mem_read($self->{IY} + $offset);
 
-	$self->calculate_sub_flags($self->{A}, $val, 0, 8);
+    	$self->flag("C", 0);
+	$self->calculate_sub_flags($self->{A}, $val, 8);
 }
 
 sub
@@ -1538,7 +1545,8 @@ CPIR
 
 	print "Comparing A: $self->{A} with $val\n";
 
-	$self->calculate_sub_flags($self->{A}, $val, 0, 8);
+    	$self->flag("C", 0);
+	$self->calculate_sub_flags($self->{A}, $val, 8);
 
 	$hl++;
 	set_value(\$self->{L}, \$self->{H}, $hl);
@@ -1589,7 +1597,8 @@ SUB_S
     my $opcode = shift;
     my $ss = $opcode & 0x7;
 
-	$self->calculate_sub_flags($self->{A}, ${$self->REG($ss)}, 0, 8);
+    	$self->flag("C", 0);
+	$self->calculate_sub_flags($self->{A}, ${$self->REG($ss)}, 8);
 
 	$self->{A} = $self->{A} - ${$self->REG($ss)};
 }
@@ -1604,7 +1613,7 @@ SBC_A_r
 
     my $ret = ($self->{A} - ${$self->REG($ss)} - $self->flag("C")) & 0xFF;
 
-	$self->calculate_sub_flags($self->{A}, ${$self->REG($ss)}, 1, 8);
+	$self->calculate_sub_flags($self->{A}, ${$self->REG($ss)}, 8);
 	
 	$self->{A} = $ret;
 }
@@ -1628,7 +1637,7 @@ SBC_HL_SS
 	set_value(\$self->{L}, \$self->{H}, $ret);
 	$self->tick(3);	
 
-	$self->calculate_sub_flags($hl, $val, 1, 16);
+	$self->calculate_sub_flags($hl, $val, 16);
 }
 
 sub
@@ -1648,7 +1657,8 @@ ADD_HL_SS
 	my $hl = get_value($self->{L}, $self->{H}); 
 	$self->tick(4);	
 
-	$self->calculate_add_flags($hl, $val, 0, 16);
+	$self->flag("C", 0);
+	$self->calculate_add_flags($hl, $val, 16);
 
 	$hl = ($hl + $val) & 0xFFFF;
 	set_value(\$self->{L}, \$self->{H}, $hl);
@@ -1660,9 +1670,10 @@ sub
 ADD_A_n
 {
 	my $self = shift;
-    my $n = $self->next_pc();
-
-	$self->calculate_add_flags($self->{A}, $n, 0, 8);
+    	my $n = $self->next_pc();
+ 
+	$self->flag("C", 0);
+	$self->calculate_add_flags($self->{A}, $n, 8);
 
 	$self->{A} = ($self->{A} + $n) & 0xFF;
 }
@@ -1672,9 +1683,10 @@ ADD_A_r
 {
 	my $self = shift;
 	my $opcode = shift;
-    my $s = $opcode & 0x7;
+    	my $s = $opcode & 0x7;
 
-	$self->calculate_add_flags($self->{A}, ${$self->REG($s)}, 0, 8);
+	$self->flag("C", 0);
+	$self->calculate_add_flags($self->{A}, ${$self->REG($s)}, 8);
 
 	$self->{A} = ($self->{A} + ${$self->REG($s)}) & 0xFF;
 }
