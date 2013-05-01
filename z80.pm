@@ -360,27 +360,23 @@ run {
 
 	my $self = shift;
 
-	if (1) {
-	#while (1) {
 
-		$self->{OP} = new op($self);
+	$self->{OP} = new op($self);
 
-		my $handled = $self->handle_interrupt();
-		if (!defined $handled) {
-			my $opcode = $self->opcode_fetch();
-			$self->{OP}->code($opcode);
-			$self->execute($opcode);
-		}
-
-		if (1 || ($self->{PC} >= 0x02BB && $self->{PC} < 0x02e7))  {
-			my $op = $self->{OP}->to_string($self->{tick_count}, $self->{R});
-			print "$op\n";
-			$self->show_mem();
-		}
-	
-		$self->int_delay();
-
+	my $handled = $self->handle_interrupt();
+	if (!defined $handled) {
+		my $opcode = $self->opcode_fetch();
+		$self->{OP}->code($opcode);
+		$self->execute($opcode);
 	}
+
+	if (1 || ($self->{PC} >= 0x02BB && $self->{PC} < 0x02e7))  {
+		my $op = $self->{OP}->to_string($self->{tick_count}, $self->{R});
+		print "$op\n";
+		$self->show_mem();
+	}
+
+	$self->int_delay();
 }
 
 
