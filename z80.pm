@@ -972,7 +972,7 @@ calculate_sub_flags
 		exit;
 	}
 
-	my $res = $a - $b - $self->{F};
+	my $res = $a - $b - $self->flag("C");
     	$self->{F} = ($self->{F} ^ $CMASK) & 0xFF;
     	$self->calculate_add_flags($a, ~(0+$b) & $MASK, $WIDTH);
     	$self->{F} = ($self->{F} ^ $CMASK) & 0xFF;
