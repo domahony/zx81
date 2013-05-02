@@ -431,12 +431,25 @@ read_keyboard_row
 	my $self = shift;
 	my $row = shift;
 
+	if (!defined $self->{KEY}) {
+		$self->{KEY} = $self->{KEYBOARD}->next_key();
+	}
+
 	my $ret = $self->{KEY}->{$row};
 
-	print "Executing Keyboard Row: " . 
+	print "Executing Keyboard Row: " .
 		 sprintf("0x%02x", $row) . " " .
 		sprintf("0x%02x", $ret) . 
 	"\n";
+	
+	#
+	# if the DEBOUNCE is zero clear the current key, so that the next time around it will read from the buffer.
+	#
+	my $debounce = $self->READ_MEMORY(0x4027) {
+		if ($debounce == 0x0) {
+			$self->{KEY} = undef;
+		}
+	}
 
 	return $ret;
 }
@@ -463,7 +476,6 @@ init_vertical_retrace
 		print "START_VERT_RT\n";
 		$self->{VERTICAL_RETRACE} = 1;
 		$self->{count} = 0;
-		$self->{KEY} = $self->{KEYBOARD}->next_key();
 	}
 }
 
