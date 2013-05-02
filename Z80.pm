@@ -968,7 +968,7 @@ calculate_sub_flags
 		exit;
 	}
 
-	my $res = $a - $b - $self->flag("C");
+	my $res = ($a - $b - $self->flag("C")) & 0xFF;
     	$self->{F} = ($self->{F} ^ $CMASK) & 0xFF;
     	$self->calculate_add_flags($a, ~(0+$b) & $MASK, $WIDTH);
     	$self->{F} = ($self->{F} ^ $CMASK) & 0xFF;
@@ -1607,7 +1607,7 @@ SBC_A_r
 
 	my $ss = $opcode & 0x7;
 
-    my $ret = ($self->{A} - ${$self->REG($ss)} - $self->flag("C")) & 0xFF;
+	my $ret = ($self->{A} - ${$self->REG($ss)} - $self->flag("C")) & 0xFF;
 
 	$self->calculate_sub_flags($self->{A}, ${$self->REG($ss)}, 8);
 	

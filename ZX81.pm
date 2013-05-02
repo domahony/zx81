@@ -445,10 +445,10 @@ read_keyboard_row
 	#
 	# if the DEBOUNCE is zero clear the current key, so that the next time around it will read from the buffer.
 	#
-	my $debounce = $self->READ_MEMORY(0x4027) {
-		if ($debounce == 0x0) {
-			$self->{KEY} = undef;
-		}
+	my $debounce = $self->read_memory(0x4027);
+
+	if ($debounce == 0x0) {
+		$self->{KEY} = undef;
 	}
 
 	return $ret;
