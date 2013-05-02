@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 
-package z80;
+package Z80;
 
 use strict;
 use OpcodeLogger;

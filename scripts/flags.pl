@@ -11,7 +11,7 @@ my $SMASK = 0x80;
 my $t = new TEST;
 $t->flag("C", 1);
 $t->print;
-$t->calculate_sub_flags($ARGV[0], $ARGV[1], $t->flag("C"), 8);
+$t->calculate_sub_flags(hex($ARGV[0]), hex($ARGV[1]), 16);
 $t->print;
 
 sub
@@ -40,7 +40,7 @@ new
 sub
 calculate_add_flags
 {
-    my ($self, $a, $b, $use_carry, $WIDTH) = @_;
+    my ($self, $a, $b, $WIDTH) = @_;
     my $res;
     my $carry = 0;
 
@@ -51,7 +51,7 @@ calculate_add_flags
 
 	#print sprintf("MASK: %04x\n", $MASK);
 
-    if ($use_carry && ($self->{F} & $CMASK)) {
+    if (($self->{F} & $CMASK)) {
         $carry = 1 if ($a >= $MASK - $b);
         $res = $a + $b + 1;
     } else {
@@ -129,7 +129,7 @@ flag
 sub
 calculate_sub_flags
 {
-    my ($self, $a, $b, $use_carry, $WIDTH) = @_;
+    my ($self, $a, $b, $WIDTH) = @_;
 
 	exit unless defined $b;
 
@@ -154,10 +154,11 @@ calculate_sub_flags
 	}
 
     	$self->{F} = ($self->{F} ^ $CMASK) & 0xFF;
-    	$self->calculate_add_flags($a, ~(0+$b) & $MASK, 1 - $use_carry, $WIDTH);
+    	$self->calculate_add_flags($a, ~(0+$b) & $MASK, $WIDTH);
     	$self->{F} = ($self->{F} ^ $CMASK) & 0xFF;
 
-	my $res = $a - $b - $use_carry;
+	my $res = $a - $b - $self->flag("C");
+	print sprintf("%04x\n", $res & $MASK);
 
 	if ($res == 0) {
 		$self->flag("Z", 1);

@@ -288,8 +288,8 @@ tick1
 
 		#the problem appears after L0419 in the call at L0433
 
-		if (0 && $cpu->ADDRESS_BUS == 0x07f5) {
-			$self->dump_ram("mem.bin.0x07f5");
+		if (1 && $cpu->ADDRESS_BUS == 0x023e) {
+			$self->dump_ram("mem.bin.0x023e");
 		}
 
 		if (0 && $cpu->ADDRESS_BUS == 0x0846) {
@@ -499,7 +499,6 @@ execute_video
 sub
 print_var
 {
-	return;
 	my $self = shift;
 	my $vaddr = shift;
 
