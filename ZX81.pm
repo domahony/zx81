@@ -431,25 +431,28 @@ read_keyboard_row
 	my $self = shift;
 	my $row = shift;
 
+	my $cdflag = $self->read_memory(0x403B);
+	my $debounce = $self->read_memory(0x4027);
+
 	if (!defined $self->{KEY}) {
+		$self->{KEY} = $self->{KEYBOARD}->next_key();
+	} elsif ($cdflag & 0x1) {
 		$self->{KEY} = $self->{KEYBOARD}->next_key();
 	}
 
-	my $ret = $self->{KEY}->{$row};
+	my $ret;
+	if (defined $self->{KEY}) {
+		$self->{KEYBOARD}->print($self->{KEY});
+		$ret = $self->{KEY}->{$row};
+	} else {
+		$ret = 0x1F;
+	}
 
-	print "Executing Keyboard Row: " .
+
+	print "EXECUTING KEY ROW: " .
 		 sprintf("0x%02x", $row) . " " .
 		sprintf("0x%02x", $ret) . 
 	"\n";
-	
-	#
-	# if the DEBOUNCE is zero clear the current key, so that the next time around it will read from the buffer.
-	#
-	my $debounce = $self->read_memory(0x4027);
-
-	if ($debounce == 0x0) {
-		$self->{KEY} = undef;
-	}
 
 	return $ret;
 }

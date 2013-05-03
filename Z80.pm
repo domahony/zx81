@@ -136,6 +136,7 @@ my %CB_OP = (
 	0x7E => [\&BIT_HL, "BIT 7, (HL)"],
 	0x86 => [\&RES_b_pHLp,"RES b,(HL)"],
 	0xB6 => [\&RES_b_pHLp,"RES b,(HL)"],
+	0xC6 => [\&SET_b_pHLp,"SET 0,(HL)"],
 	0xD9 => [\&SET_b_r,"SET b,C"],
 	0xFC => [\&SET_b_r,"SET 7,H"],
 	0xFE => [\&SET_b_pHLp,"SET b,(HL)"],
@@ -1863,6 +1864,24 @@ SET_b_r
 	my $mask = 0x1 << $b;
 
 	${$self->REG($r)} |= $mask;
+}
+
+sub
+SET_b_pHLp
+{
+	my $self = shift;
+	my $opcode = shift;
+
+	my $b = ($opcode >> 3) & 0x7;
+
+	my $hl = get_value($self->{L}, $self->{H});
+
+	my $val = $self->mem_read($hl);
+	$self->tick(3);
+	$val = ($val | (0x1 << $b)) & 0xFF;
+	$self->tick(1);
+	$self->mem_write($hl, $val);
+	$self->tick(3);
 }
 
 sub

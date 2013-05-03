@@ -86,6 +86,7 @@ keyboard
 
 	print "KEYBOARD $char\n";
 	if (!defined $KEYS{$char}) {
+		print "NOKEY!!!\n";
 		return;
 	}
 	my $key = $KEYS{$char};
@@ -130,6 +131,7 @@ next_key
 
 	if (!defined $ret) {
 
+		return undef;
 		my %key = (
 			0xFE => 0x1F,
 			0xFD => 0x1F,
@@ -145,6 +147,17 @@ next_key
 	}
 
 	return $ret;
+}
+
+sub
+print
+{
+	my $self = shift;
+	my $k = shift;
+
+	foreach (keys %{$k}) {
+		print "KEY DBG $_: $k->{$_}\n";
+	} 
 }
 
 1;
