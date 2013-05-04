@@ -131,6 +131,8 @@ my %CB_OP = (
 	0x10 => [\&RL_r, "RL B"],
 	0x13 => [\&RL_r, "RL E"],
 	0x14 => [\&RL_r, "RL H"],
+	0x19 => [\&RR_r, "RR C"],
+	0x28 => [\&SRA_m, "SRA B"],
 	0x3B => [\&SRL_E,"SRL E"],
 	0x46 => [\&BIT_HL, "BIT 0, (HL)"],
 	0x7E => [\&BIT_HL, "BIT 7, (HL)"],
@@ -163,8 +165,9 @@ my %OP = (
 	0x06 => [\&LD_R_N,"LD B, n"],
 	0x08 => [\&EX_AF_AFp,"EX AF, AF'"],
 	0x09 => [\&ADD_HL_SS,"ADD HL,BC"],
-	0x0E => [\&LD_R_N,"LD C,n"],
+	0x0C => [\&INC_R,"INC C"],
 	0x0D => [\&DEC8,"DEC C"],
+	0x0E => [\&LD_R_N,"LD C,n"],
 	0x10 => [\&DJNZ_E,"DJNZ, e"],
 	0x11 => ["LD_DD_NN","LD DE, nn"],
 	0x15 => [\&DEC8,"DEC D"],
@@ -183,6 +186,7 @@ my %OP = (
 	0x29 => [\&ADD_HL_SS,"ADD HL,HL"],
 	0x2A => [\&LD_HL_NN,"LD HL, (nn)"],
 	0x2B => [\&DEC16,"DEC HL"],
+	0x2E => [\&LD_R_N,"LD L,n"],
 	0x2F => [\&CPL,"CPL"],
 	0x30 => [\&JR_NC_E,"JR NC E"],
 	0x32 => [\&LD_NN_A,"LD (nn), A"],
@@ -236,6 +240,7 @@ my %OP = (
 	0x86 => [\&ADD_A_HL,"ADD A,(HL)"],
 	0x87 => [\&ADD_A_r,"ADD A,A"],
 	0x91 => [\&SUB_S,"SUB A,C"],
+	0x95 => [\&SUB_S,"SUB A,L"],
 	0x9F => [\&SBC_A_r,"SBC A,r"],
 	0xA0 => [\&AND_S,"AND B"],
 	0xA2 => [\&AND_S,"AND D"],
@@ -649,7 +654,7 @@ execute
 
 	if (!defined(&{$fn})) {
 		$self->{tickfn}->("DUMP_RAM");
-		print "BBBBBBBB\n";
+		print "BBBBBBBB " . sprintf("%02x", $opcode) . "\n";
 		$self->show_mem();
 	}
 
@@ -1456,7 +1461,7 @@ INC_R
 	$self->flag("C", 0);
 	$self->calculate_add_flags(${$self->REG($r)}, 1, 8);
 
-	${$self->REG($r)} = ${$self->REG($r)} + 1;
+	${$self->REG($r)} = (${$self->REG($r)} + 1) & 0xFF;
 }
 
 sub
@@ -1591,8 +1596,8 @@ sub
 SUB_S
 {
 	my $self = shift;
-    my $opcode = shift;
-    my $ss = $opcode & 0x7;
+	my $opcode = shift;
+	my $ss = $opcode & 0x7;
 
     	$self->flag("C", 0);
 	$self->calculate_sub_flags($self->{A}, ${$self->REG($ss)}, 8);
@@ -1919,6 +1924,26 @@ RES_B_IYd
 	$self->mem_write($self->{IY} + $FDCB_OFFSET, $value);
 }
 
+sub
+SRA_m
+{
+	my $self = shift;
+	my $opcode = shift;
+	my $r = $opcode & 0x7;
+
+	my $bit7 = ${$self->REG($r)} & 0x80;
+
+	$self->flag("C", ${$self->REG($r)} & 0x1);
+	${$self->REG($r)} = (${$self->REG($r)} >> 1) & $bit7;
+
+	$self->flag("S", $bit7 != 0);
+	$self->flag("Z", ${$self->REG($r)} == 0);
+
+	$self->flag("H", 0);
+	$self->flag("PV", calculate_parity(${$self->REG($r)}, 8));
+	$self->flag("N", 0);
+}
+
 
 sub
 BIT_B_IYd
@@ -2174,32 +2199,57 @@ sub
 RL_r
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $r = $opcode & 0x7;
+	my $r = $opcode & 0x7;
 
-    $self->flag("H", 0);
-    $self->flag("N", 0);
+	$self->flag("H", 0);
+	$self->flag("N", 0);
 
-    my ($orig_c) = $self->flag("C");
+	my ($orig_c) = $self->flag("C");
 
-    $self->flag("C", ((${$self->REG($r)} >> 7) & 0x1));
+	$self->flag("C", ((${$self->REG($r)} >> 7) & 0x1));
 
-    ${$self->REG($r)} = ((${$self->REG($r)} << 1) & 0xFF);
+	${$self->REG($r)} = ((${$self->REG($r)} << 1) & 0xFF);
 
-    if ($orig_c != 0) {
-        ${$self->REG($r)} |= 0x1;
-    }
+	if ($orig_c != 0) {
+		${$self->REG($r)} |= 0x1;
+    	}
 
-    ${$self->REG($r)} |= $orig_c; 
+	${$self->REG($r)} |= $orig_c; 
 
-    $self->flag("S", (${$self->REG($r)} >> 7) & 0x1);
-    $self->flag("Z", ${$self->REG($r)} == 0);
-    $self->flag("PV", calculate_parity(${$self->REG($r)}, 8));
-
-	$self->tick(4);
+	$self->flag("S", (${$self->REG($r)} >> 7) & 0x1);
+	$self->flag("Z", ${$self->REG($r)} == 0);
+	$self->flag("PV", calculate_parity(${$self->REG($r)}, 8));
 }
 
+sub
+RR_r
+{
+	my $self = shift;
+	my $opcode = shift;
+
+	my $r = $opcode & 0x7;
+
+	$self->flag("H", 0);
+	$self->flag("N", 0);
+
+	my ($orig_c) = $self->flag("C");
+
+	$self->flag("C", (${$self->REG($r)} & 0x1));
+
+	${$self->REG($r)} = ((${$self->REG($r)} >> 1) & 0xFF);
+
+	if ($orig_c == 0) {
+		${$self->REG($r)} &= 0x7F;
+	} else {
+		${$self->REG($r)} |= 0x80;
+	}
+
+	$self->flag("S", (${$self->REG($r)} >> 7) & 0x1);
+	$self->flag("Z", ${$self->REG($r)} == 0);
+	$self->flag("PV", calculate_parity(${$self->REG($r)}, 8));
+}
 
 sub
 CALL_NN
