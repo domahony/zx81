@@ -123,6 +123,7 @@ my %FDCB_OP = (
 	0x8E => [\&RES_B_IYd, "RES 1, (IY+d)"],
 	0x96 => [\&RES_B_IYd, "RES 2, (IY+d)"],
 	0xC6 => [\&SET_B_IYd, "SET 0, (IY+d)"],
+	0xD6 => [\&SET_B_IYd, "SET 2, (IY+d)"],
 	0xFE => [\&SET_B_IYd, "SET 7, (IY+d)"],
 );
 
@@ -135,6 +136,7 @@ my %CB_OP = (
 	0x28 => [\&SRA_m, "SRA B"],
 	0x3B => [\&SRL_E,"SRL E"],
 	0x46 => [\&BIT_HL, "BIT 0, (HL)"],
+	0x77 => [\&BIT_b_r, "BIT 6, A"],
 	0x7E => [\&BIT_HL, "BIT 7, (HL)"],
 	0x86 => [\&RES_b_pHLp,"RES b,(HL)"],
 	0xB6 => [\&RES_b_pHLp,"RES b,(HL)"],
@@ -142,6 +144,7 @@ my %CB_OP = (
 	0xD9 => [\&SET_b_r,"SET b,C"],
 	0xFC => [\&SET_b_r,"SET 7,H"],
 	0xFE => [\&SET_b_pHLp,"SET b,(HL)"],
+	0xFF => [\&SET_b_r,"SET 7,A"],
 );
 
 my %FD_OP = (
@@ -149,6 +152,7 @@ my %FD_OP = (
 	0x35 => [\&DEC_IYd, "DEC (IY+d)"],
 	0x36 => [\&LD_IYd_N, "LD (IY+d), N"],
 	0x73 => [\&LD_IYd_R, "LD (IY+d), E"],
+	0x75 => [\&LD_IYd_R, "LD (IY+d), L"],
 	0x46 => [\&LD_r_IYd, "LD B, (IY + d)"],
 	0x4E => [\&LD_r_IYd, "LD C, (IY + d)"],
 	0xBE => [\&CP_IYd, "CP (IY + d)"],
@@ -170,6 +174,7 @@ my %OP = (
 	0x0E => [\&LD_R_N,"LD C,n"],
 	0x10 => [\&DJNZ_E,"DJNZ, e"],
 	0x11 => ["LD_DD_NN","LD DE, nn"],
+	0x12 => [\&LD12,"LD (DE), A"],
 	0x15 => [\&DEC8,"DEC D"],
 	0x16 => [\&LD_R_N,"LD D, n"],
 	0x17 => [\&RLA,"RLA"],
@@ -182,10 +187,12 @@ my %OP = (
 	0x22 => [\&LD_NN_HL,"LD (nn), HL"],
 	0x23 => [\&INC_SS,"INC HL"],
 	0x25 => [\&DEC8,"DEC H"],
+	0x26 => [\&LD_R_N,"LD H,n"],
 	0x28 => [\&JR_Z_E,"JR Z,e"],
 	0x29 => [\&ADD_HL_SS,"ADD HL,HL"],
 	0x2A => [\&LD_HL_NN,"LD HL, (nn)"],
 	0x2B => [\&DEC16,"DEC HL"],
+	0x2C => [\&INC_R,"INC L"],
 	0x2E => [\&LD_R_N,"LD L,n"],
 	0x2F => [\&CPL,"CPL"],
 	0x30 => [\&JR_NC_E,"JR NC E"],
@@ -214,12 +221,14 @@ my %OP = (
 	0x58 => [\&LD_R_RP,"LD E,B"],
 	0x5D => [\&LD_R_RP,"LD E,L"],
 	0x5E => [\&LD_R_HL,"LD, E,(HL)"],
+	0x5F => [\&LD_R_RP,"LD E,A"],
 	0x60 => [\&LD_R_RP,"LD H,B"],
 	0x62 => [\&LD_R_RP,"LD H,D"],
 	0x67 => [\&LD_R_RP,"LD, H,A"],
 	0x69 => [\&LD_R_RP,"LD, L,C"],
 	0x6B => [\&LD_R_RP,"LD, L,E"],
 	0x6F => [\&LD_R_RP, "LD, L,A"],
+	0x71 => [\&LD_pHLp_R, "LD, (HL),C"],
 	0x72 => [\&LD_pHLp_R, "LD, (HL),D"],
 	0x73 => [\&LD_pHLp_R, "LD, (HL),E"],
 	0x76 => [\&HALT, "HALT"],
@@ -273,6 +282,7 @@ my %OP = (
 	0xD3 => ["OUT","OUT (n), A"],
 	0xD5 => [\&PUSH_QQ,"PUSH DE"],
 	0xDD => [\&DD,"**** DD ****"],
+	0xD7 => [\&RST,"RST 0x0010"],
 	0xD8 => [\&RET_CC,"RET C"],
 	0xD9 => [\&EXX,"EXX"],
 	0xE0 => [\&RET_CC,"RET PO"],
@@ -281,6 +291,7 @@ my %OP = (
 	0xE5 => [\&PUSH_QQ,"PUSH HL"],
 	0xE6 => [\&AND_n,"AND n"],
 	0xE9 => [\&JP_HL,"JP (HL)"],
+	0xEA => [\&JP_CC,"JP PE, CC"],
 	0xEB => [\&EX_DE_HL,"EX DE,HL"],
 	0xED => [\&ED,"**** ED ****"],
 	0xF1 => [\&POP_QQ,"POP AF"],
@@ -1343,15 +1354,24 @@ sub
 LD_IYd_R
 {
 	my $self = shift;
-    my $opcode = shift;
-    my $r = $opcode & 0x7;
+	my $opcode = shift;
+	my $r = $opcode & 0x7;
 
-    my $offset = unpack('c', pack('C', $self->next_pc()));
-    my ($loc) = $self->{IY} + $offset;
+	my $offset = unpack('c', pack('C', $self->next_pc()));
+	my ($loc) = $self->{IY} + $offset;
 
 	$self->tick(2);
 	$self->mem_write($loc, ${$self->REG($r)});
 	$self->tick(3);
+}
+
+sub
+LD12
+{
+	my $self = shift;
+	my $addr = get_value($self->{E}, $self->{D});
+
+	$self->mem_write($addr, $self->{A});
 }
 
 sub
@@ -1390,16 +1410,16 @@ sub
 DEC_pHLp
 {
 	my $self = shift;
-    my ($hl) = get_value($self->{L}, $self->{H});
+	my ($hl) = get_value($self->{L}, $self->{H});
 
 	my $val = $self->mem_read($hl);
     	$self->flag("C", 0);
 	$self->calculate_sub_flags($val, 1, 8);
 
-    if ($val == 0x80) {
-    	$self->flag("PV", 1);
-    } else {
-    	$self->flag("PV", 0);
+	if ($val == 0x80) {
+		$self->flag("PV", 1);
+	} else {
+		$self->flag("PV", 0);
 	}
 
 	$val--;
@@ -1434,19 +1454,19 @@ sub
 DEC16
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $ss = ($opcode >> 4) & 0x3;
+	my $ss = ($opcode >> 4) & 0x3;
 
-    my $regpair = $self->REGPAIR($ss);
+	my $regpair = $self->REGPAIR($ss);
 
 	my $high = ${$regpair->[0]};
 	my $low = ${$regpair->[1]};
 
-    my $hl = get_value($low, $high);
+	my $hl = get_value($low, $high);
 	$self->tick(1);
 
-    set_value($regpair->[1], $regpair->[0], ($hl - 1) & 0xFFFF);
+	set_value($regpair->[1], $regpair->[0], ($hl - 1) & 0xFFFF);
 	$self->tick(1);
 }
 
@@ -1854,6 +1874,22 @@ XOR_HL
     $self->flag("PV", calculate_parity($self->{A}, 8));
     $self->flag("N", 0);
     $self->flag("C", 0);
+}
+
+
+sub
+BIT_b_r
+{
+	my $self = shift;
+	my $opcode = shift;
+
+	my $b = ($opcode >> 3) & 0x7;
+
+	my $r = $opcode & 0x7;
+
+	$self->flag("Z", ((${$self->REG($r)} >> $b) & 0x1) == 0);  
+	$self->flag("H", 1);
+	$self->flag("N", 0);
 }
 
 sub
@@ -2408,7 +2444,7 @@ RST
 	my $flags = shift;
 	my $other = shift;
 
-    my $t = ($opcode >> 3) & 0x7;
+	my $t = ($opcode >> 3) & 0x7;
 
 	my %addr = (
 		0x0 => 0x0,
@@ -2421,12 +2457,12 @@ RST
 		0x7 => 0x38,
 	);
 
-    my $sp = get_value($self->{S}, $self->{P});
+	my $sp = get_value($self->{S}, $self->{P});
 
 	$self->mem_write(--$sp, ($self->{PC} >> 8) & 0xFF);
 	$self->mem_write(--$sp, $self->{PC} & 0xFF);
 
-    set_value(\$self->{S}, \$self->{P}, $sp);
+	set_value(\$self->{S}, \$self->{P}, $sp);
 
 	if (defined $other) {
 		$self->{PC} = $other;
