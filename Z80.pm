@@ -996,7 +996,7 @@ calculate_sub_flags
 		$self->flag("Z", 0);
 	}
 
-	$self->flag("S", ($res >> 7) & 0x1);
+	$self->flag("S", ($res >> ($WIDTH - 1)) & 0x1);
 
 	$self->flag("N", 1);
 }
@@ -1033,11 +1033,7 @@ calculate_add_flags
     $self->{F} |= $HMASK if (($carryIns >> $hshift) & 0x1);
     $self->{F} |= $CMASK if ($carry);
 
-	if ($res < 0) {
-		$self->flag("S", 1);
-	} else {
-		$self->flag("S", 0);
-	}
+	$self->flag("S", ($res >> ($WIDTH - 1)) & 0x1);
 
 	if ($res == 0) {
 		$self->flag("Z", 1);
