@@ -1970,7 +1970,7 @@ SRA_m
 	my $bit7 = ${$self->REG($r)} & 0x80;
 
 	$self->flag("C", ${$self->REG($r)} & 0x1);
-	${$self->REG($r)} = (${$self->REG($r)} >> 1) & $bit7;
+	${$self->REG($r)} = (${$self->REG($r)} >> 1) | $bit7;
 
 	$self->flag("S", $bit7 != 0);
 	$self->flag("Z", ${$self->REG($r)} == 0);
