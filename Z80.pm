@@ -996,11 +996,7 @@ calculate_sub_flags
 		$self->flag("Z", 0);
 	}
 
-	if ($res < 0) {
-		$self->flag("S", 1);
-	} else {
-		$self->flag("S", 0);
-	}
+	$self->flag("S", ($res >> 7) & 0x1);
 
 	$self->flag("N", 1);
 }
@@ -1388,22 +1384,22 @@ LD36
 sub
 DEC8
 {
-    my $self = shift;
-    my $opcode = shift;
-    my $r = ($opcode >> 3) & 0x7;
+	my $self = shift;
+	my $opcode = shift;
+	my $r = ($opcode >> 3) & 0x7;
 
-    my $orig = ${$self->REG($r)};
+	my $orig = ${$self->REG($r)};
 
-    my $ret = (${$self->REG($r)} - 1) & 0xFF;
-    $self->flag("C", 0);
-    $self->calculate_sub_flags(${$self->REG($r)}, 1, 8);
+	my $ret = (${$self->REG($r)} - 1) & 0xFF;
+	$self->flag("C", 0);
+	$self->calculate_sub_flags(${$self->REG($r)}, 1, 8);
 
 	${$self->REG($r)} = $ret;
 
-    $self->flag("PV", 0);
-    if ($orig == 0x80) {
-    	$self->flag("PV", 1);
-    }
+	$self->flag("PV", 0);
+	if ($orig == 0x80) {
+		$self->flag("PV", 1);
+	}
 }
 
 sub
