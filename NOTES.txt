@@ -1,4 +1,12 @@
+
+May 5, 2013
+
+Fixed bug in the calculate_add_flags routine - it was not setting the Z flag correctly.
+
+Need to figure out why the second key press is not being recognized.
+
 May 5, 2013
 
 The key lookup at L0515 is not correct.  
 A should be indexing into the K-UNSHIFT values 
+

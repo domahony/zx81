@@ -156,7 +156,10 @@ print
 	my $k = shift;
 
 	foreach (keys %{$k}) {
-		print "KEY DBG $_: $k->{$_}\n";
+		print "KEY DBG " 
+			. sprintf("0x%02x", $_) 
+			. ": " 
+			. sprintf("0x%02x", $k->{$_}) . "\n";
 	} 
 }
 

@@ -117,6 +117,7 @@ my %ED_OP = (
 
 my %FDCB_OP = (
 	0x4E => [\&BIT_B_IYd, "BIT B, (IY+d)"],
+	0x56 => [\&BIT_B_IYd, "BIT 2, (IY+d)"],
 	0x6E => [\&BIT_B_IYd, "BIT 5, (IY+d)"],
 	0x7E => [\&BIT_B_IYd, "BIT 7, (IY+d)"],
 	0x86 => [\&RES_B_IYd, "RES 0, (IY+d)"],
@@ -193,6 +194,7 @@ my %OP = (
 	0x2A => [\&LD_HL_NN,"LD HL, (nn)"],
 	0x2B => [\&DEC16,"DEC HL"],
 	0x2C => [\&INC_R,"INC L"],
+	0x2D => [\&DEC8,"DEC L"],
 	0x2E => [\&LD_R_N,"LD L,n"],
 	0x2F => [\&CPL,"CPL"],
 	0x30 => [\&JR_NC_E,"JR NC E"],
@@ -211,6 +213,7 @@ my %OP = (
 	0x42 => [\&LD_R_RP,"LD B,D"],
 	0x44 => [\&LD_R_RP,"LD B,H"],
 	0x46 => [\&LD_R_HL,"LD, B,(HL)"],
+	0x48 => [\&LD_R_RP,"LD C,B"],
 	0x4D => [\&LD_R_RP,"LD C,L"],
 	0x4F => [\&LD_R_RP,"LD C,A"],
 	0x51 => [\&LD_R_RP,"LD D,C"],
@@ -1004,34 +1007,36 @@ calculate_sub_flags
 sub
 calculate_add_flags
 {
-    my ($self, $a, $b, $WIDTH) = @_;
-    my $res;
-    my $carry = 0;
+	my ($self, $a, $b, $WIDTH) = @_;
+	my $res;
+	my $carry = 0;
 
-    my $MASK = 0;
-    for (1 .. $WIDTH) {
-        $MASK = ($MASK << 1) | 0x1;
-    }
+	my $MASK = 0;
+	for (1 .. $WIDTH) {
+	    $MASK = ($MASK << 1) | 0x1;
+	}
 
 	#print sprintf("MASK: %04x\n", $MASK);
 
-    if ($self->{F} & $CMASK) {
-        $carry = 1 if ($a >= $MASK - $b);
-        $res = $a + $b + 1;
-    } else {
-        $carry = 1 if ($a > $MASK - $b);
-        $res = $a + $b;
-    }
+	if ($self->{F} & $CMASK) {
+	    $carry = 1 if ($a >= $MASK - $b);
+	    $res = $a + $b + 1;
+	} else {
+	    $carry = 1 if ($a > $MASK - $b);
+	    $res = $a + $b;
+	}
 
-    my $oshift = $WIDTH - 1;
-    my $hshift = $WIDTH - 4;
+	$res &= $MASK;
 
-    my $carryIns = $res ^ $a ^ $b;
-    $self->{F} = ($self->{F} & ~($CMASK | $PVMASK | $HMASK)) & $MASK;
+	my $oshift = $WIDTH - 1;
+	my $hshift = $WIDTH - 4;
 
-    $self->{F} |= $PVMASK if ((($carryIns >> $oshift) ^ $carry) & 0x1);
-    $self->{F} |= $HMASK if (($carryIns >> $hshift) & 0x1);
-    $self->{F} |= $CMASK if ($carry);
+	my $carryIns = $res ^ $a ^ $b;
+	$self->{F} = ($self->{F} & ~($CMASK | $PVMASK | $HMASK)) & $MASK;
+
+	$self->{F} |= $PVMASK if ((($carryIns >> $oshift) ^ $carry) & 0x1);
+	$self->{F} |= $HMASK if (($carryIns >> $hshift) & 0x1);
+	$self->{F} |= $CMASK if ($carry);
 
 	$self->flag("S", ($res >> ($WIDTH - 1)) & 0x1);
 
@@ -1092,14 +1097,14 @@ EX_DE_HL
 {
 	my $self = shift;
 
-    my $Dt = $self->{D};
-    my $Et = $self->{E};
+	my $Dt = $self->{D};
+	my $Et = $self->{E};
 
-    $self->{D} = $self->{H};
-    $self->{E} = $self->{L};
+	$self->{D} = $self->{H};
+	$self->{E} = $self->{L};
 
-    $self->{H} = $Dt;
-    $self->{L} = $Et;
+	$self->{H} = $Dt;
+	$self->{L} = $Et;
 }
 
 sub
@@ -1206,12 +1211,12 @@ LD_DD_NN
 	my $self = shift;
 	my $opcode = shift;
 
-    my $dd = ($opcode >> 4) & 0x3;
+	my $dd = ($opcode >> 4) & 0x3;
 
-    my $low = $self->next_pc();
-    my $high = $self->next_pc();
+	my $low = $self->next_pc();
+	my $high = $self->next_pc();
 
-    my $regpair = $self->REGPAIR($dd);
+	my $regpair = $self->REGPAIR($dd);
 
 	${$regpair->[0]} = $high;
 	${$regpair->[1]} = $low;
@@ -1470,8 +1475,10 @@ INC_R
 
 	my $r = ($opcode >> 3) & 0x7;
 
+	my $orig_c = $self->flag("C");
 	$self->flag("C", 0);
 	$self->calculate_add_flags(${$self->REG($r)}, 1, 8);
+	$self->flag("C", $orig_c);
 
 	${$self->REG($r)} = (${$self->REG($r)} + 1) & 0xFF;
 }
@@ -1602,6 +1609,10 @@ LDDR
 		$self->tick(5);
 		$self->{PC} -= 2;
 	}
+
+	$self->flag("H", 0);
+	$self->flag("PV", 0);
+	$self->flag("N", 0);
 }
 
 sub
