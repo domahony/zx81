@@ -71,7 +71,7 @@ new
 	$ret->{PROG} = \@PROG; 
 
 	for (0 .. 64 * 1024) {
-    		$ret->{RAM}->[$_] = 0;
+		$ret->{RAM}->[$_] = 0;
 	}
 
 	my $tv = new TV();
