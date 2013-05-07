@@ -71,7 +71,7 @@ new
 	$ret->{PROG} = \@PROG; 
 
 	for (0 .. 64 * 1024) {
-    		$ret->{RAM}->[$_] = 0;
+		$ret->{RAM}->[$_] = 0;
 	}
 
 	my $tv = new TV();
@@ -84,6 +84,9 @@ new
 	$ret->{CPU} = $cpu;
 	$ret->{TV} = $tv;
 	$ret->{KEYBOARD} = $kb;
+
+	$ret->{T0} = time;
+	$ret->{TC} = 0;
 
 	return $ret;
 }
@@ -276,6 +279,15 @@ sub
 tick1
 {
 	my $self = shift;
+
+	if (($self->{TC}++ %1000) == 0) {
+		my $now = time;
+		my $tps = 1000/(($now - $self->{T0}) + 1);
+		$self->{T0} = $now;
+		print "TICKS PER SECOND: $tps\n";
+	}
+
+
 	my $cpu = $self->{CPU};
 
 	if (!defined $cpu->{HALT} && defined $cpu->{M1} && defined $cpu->{MREQ}) {
@@ -436,7 +448,9 @@ read_keyboard_row
 
 	if (!defined $self->{KEY}) {
 		$self->{KEY} = $self->{KEYBOARD}->next_key();
-	} elsif ($cdflag & 0x1) {
+	} elsif ($cdflag & 0x1) { 
+		$self->{KEY} = $self->{KEYBOARD}->next_key();
+	} elsif ($debounce == 0xFF) {
 		$self->{KEY} = $self->{KEYBOARD}->next_key();
 	}
 

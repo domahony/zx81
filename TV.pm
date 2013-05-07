@@ -22,10 +22,10 @@ out vec4 outputColor;
 
 void main()
 {
-    float lerpValue = gl_FragCoord.y / 500.0f;
-    
-    outputColor = mix(vec4(1.0f, 1.0f, 1.0f, 1.0f),
-        vec4(0.2f, 0.2f, 0.2f, 1.0f), lerpValue);
+	float lerpValue = gl_FragCoord.y / 500.0f;
+	
+	outputColor = mix(vec4(1.0f, 1.0f, 1.0f, 1.0f),
+	    vec4(0.2f, 0.2f, 0.2f, 1.0f), lerpValue);
 }
 };
 
@@ -167,14 +167,14 @@ getOrthoMatrix
 
 	my ($left, $right, $top, $bottom, $near, $far) = (0, $w, 0, $h, 0, 1.0);
 
-    my @matrix = (
-        2.0 / ($right - $left), 0, 0, -1 * ($right + $left) / ($right - $left),
-        0, 2.0 / ($top - $bottom), 0, -1 * ($top + $bottom) / ($top - $bottom),
-        0, 0, -2.0 / ($far - $near), -1 * ($far + $near) / ($far - $near),
-        0, 0, 0, 1.0,
-    );
+	my @matrix = (
+	    2.0 / ($right - $left), 0, 0, -1 * ($right + $left) / ($right - $left),
+	    0, 2.0 / ($top - $bottom), 0, -1 * ($top + $bottom) / ($top - $bottom),
+	    0, 0, -2.0 / ($far - $near), -1 * ($far + $near) / ($far - $near),
+	    0, 0, 0, 1.0,
+	);
 
-    my $matrix = OpenGL::Array->new_list(GL_FLOAT, @matrix);
+	my $matrix = OpenGL::Array->new_list(GL_FLOAT, @matrix);
 
 	return $matrix;
 }

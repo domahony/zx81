@@ -1,4 +1,13 @@
 
+May 6, 2013
+
+Better keyboard reading.  Still seems to lose keystrokes if you try and 
+type too fast.
+
+Runs extremely slowly.
+
+Implemented several more missing opcodes.  Keywords now appear.
+
 May 5, 2013
 
 Fixed bug in the calculate_add_flags routine - it was not setting the Z flag correctly.

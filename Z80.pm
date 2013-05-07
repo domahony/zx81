@@ -116,6 +116,7 @@ my %ED_OP = (
 );
 
 my %FDCB_OP = (
+	0x46 => [\&BIT_B_IYd, "BIT 0, (IY+d)"],
 	0x4E => [\&BIT_B_IYd, "BIT B, (IY+d)"],
 	0x56 => [\&BIT_B_IYd, "BIT 2, (IY+d)"],
 	0x6E => [\&BIT_B_IYd, "BIT 5, (IY+d)"],
@@ -139,6 +140,7 @@ my %CB_OP = (
 	0x46 => [\&BIT_HL, "BIT 0, (HL)"],
 	0x77 => [\&BIT_b_r, "BIT 6, A"],
 	0x7E => [\&BIT_HL, "BIT 7, (HL)"],
+	0x7F => [\&BIT_b_r, "BIT 7, A"],
 	0x86 => [\&RES_b_pHLp,"RES b,(HL)"],
 	0xB6 => [\&RES_b_pHLp,"RES b,(HL)"],
 	0xC6 => [\&SET_b_pHLp,"SET 0,(HL)"],
@@ -170,6 +172,7 @@ my %OP = (
 	0x06 => [\&LD_R_N,"LD B, n"],
 	0x08 => [\&EX_AF_AFp,"EX AF, AF'"],
 	0x09 => [\&ADD_HL_SS,"ADD HL,BC"],
+	0x0A => [\&LD_A_BC,"LD A,(BC)"],
 	0x0C => [\&INC_R,"INC C"],
 	0x0D => [\&DEC8,"DEC C"],
 	0x0E => [\&LD_R_N,"LD C,n"],
@@ -213,6 +216,7 @@ my %OP = (
 	0x42 => [\&LD_R_RP,"LD B,D"],
 	0x44 => [\&LD_R_RP,"LD B,H"],
 	0x46 => [\&LD_R_HL,"LD, B,(HL)"],
+	0x47 => [\&LD_R_RP,"LD B,A"],
 	0x48 => [\&LD_R_RP,"LD C,B"],
 	0x4D => [\&LD_R_RP,"LD C,L"],
 	0x4F => [\&LD_R_RP,"LD C,A"],
@@ -795,22 +799,22 @@ tick
 sub
 get_value
 {
-    my ($l, $h) = @_;
+	my ($l, $h) = @_;
 
-    if (!defined $h) {
-        exit;
-    }
+	if (!defined $h) {
+	    exit;
+	}
 
-    return ($h << 8) | $l;
+	return ($h << 8) | $l;
 }
 
 sub
 set_value
 {
-    my ($lref, $href, $val) = @_;
+	my ($lref, $href, $val) = @_;
 
-    ${$href} = ($val >> 8) & 0xFF;
-    ${$lref} = $val & 0xFF;
+	${$href} = ($val >> 8) & 0xFF;
+	${$lref} = $val & 0xFF;
 }
 
 sub
@@ -841,16 +845,16 @@ swap_pair
 sub
 calculate_parity
 {
-    my ($val, $size) = @_;
+	my ($val, $size) = @_;
 
-    my $ret = 0x1;
-    for (0 .. $size - 1) {
-        if ((($val >> $_) & 0x1) == 1)   {
-            $ret = (~$ret) & 0x1;
-        }
-    }
+	my $ret = 0x1;
+	for (0 .. $size - 1) {
+	    if ((($val >> $_) & 0x1) == 1)   {
+	        $ret = (~$ret) & 0x1;
+	    }
+	}
 
-    return $ret;
+	return $ret;
 }
 
 sub
@@ -875,7 +879,7 @@ sub
 show_mem
 {
 	my $self = shift;
-    my $pc = sprintf "%04x", $self->{PC};
+	my $pc = sprintf "%04x", $self->{PC};
 	
 	print "A : " . sprintf("%02x", $self->{A}) . " ";
 	print "F : " . sprintf("%02x", $self->{F}) . " ";
@@ -903,7 +907,7 @@ show_mem
 	print "IX: " . sprintf("%04x", $self->{IX}) . " ";
 	print "IY: " . sprintf("%04x", $self->{IY}) . "\n";
 
-    print "(S: " . $self->flag('S') . " ";
+	print "(S: " . $self->flag('S') . " ";
 	print "Z: " . $self->flag('Z') . " ";
 	print "H: " . $self->flag('H') . " ";
 	print "PV: " . $self->flag('PV') . " ";
@@ -916,15 +920,15 @@ show_mem
 sub
 calculate_sub_flags_1
 {
-    my ($self, $a, $b, $use_carry, $WIDTH) = @_;
+	my ($self, $a, $b, $use_carry, $WIDTH) = @_;
 
 	my $c = 0;		
 	$c = 1 if $use_carry;
 
-    my $MASK = 0;
-    for (1 .. $WIDTH) {
-        $MASK = ($MASK << 1) | 0x1;
-    }
+	my $MASK = 0;
+	for (1 .. $WIDTH) {
+	    $MASK = ($MASK << 1) | 0x1;
+	}
 
 	my $ret = ($a - $b - $c) & $MASK; 
 
@@ -940,15 +944,15 @@ calculate_sub_flags_1
 sub
 calculate_add_flags_1
 {
-    my ($self, $a, $b, $use_carry, $WIDTH) = @_;
+	my ($self, $a, $b, $use_carry, $WIDTH) = @_;
 
 	my $c = 0;		
 	$c = 1 if $use_carry;
 
-    my $MASK = 0;
-    for (1 .. $WIDTH) {
-        $MASK = ($MASK << 1) | 0x1;
-    }
+	my $MASK = 0;
+	for (1 .. $WIDTH) {
+	    $MASK = ($MASK << 1) | 0x1;
+	}
 
 	my $ret = ($a + $b + $c) & $MASK; 
 
@@ -964,14 +968,14 @@ calculate_add_flags_1
 sub
 calculate_sub_flags
 {
-    my ($self, $a, $b, $WIDTH) = @_;
+	my ($self, $a, $b, $WIDTH) = @_;
 
 	exit unless defined $b;
 
-    my $MASK = 0;
-    for (1 .. $WIDTH) {
-        $MASK = ($MASK << 1) | 0x1;
-    }
+	my $MASK = 0;
+	for (1 .. $WIDTH) {
+	    $MASK = ($MASK << 1) | 0x1;
+	}
 
 	print "MASK $MASK\n";
 
@@ -989,9 +993,9 @@ calculate_sub_flags
 	}
 
 	my $res = ($a - $b - $self->flag("C")) & 0xFF;
-    	$self->{F} = ($self->{F} ^ $CMASK) & 0xFF;
-    	$self->calculate_add_flags($a, ~(0+$b) & $MASK, $WIDTH);
-    	$self->{F} = ($self->{F} ^ $CMASK) & 0xFF;
+		$self->{F} = ($self->{F} ^ $CMASK) & 0xFF;
+		$self->calculate_add_flags($a, ~(0+$b) & $MASK, $WIDTH);
+		$self->{F} = ($self->{F} ^ $CMASK) & 0xFF;
 
 	if ($res == 0) {
 		$self->flag("Z", 1);
@@ -1064,27 +1068,27 @@ EX_AF_AFp
 {
 	my $self = shift;
 
-    my $At = $self->{A};
-    my $Ft = $self->{F};
+	my $At = $self->{A};
+	my $Ft = $self->{F};
 
-    $self->{A} = $self->{Ap};
-    $self->{F} = $self->{Fp};
+	$self->{A} = $self->{Ap};
+	$self->{F} = $self->{Fp};
 
-    $self->{Ap} = $At;
-    $self->{Fp} = $Ft;
+	$self->{Ap} = $At;
+	$self->{Fp} = $Ft;
 }
 
 sub
 EX_SP_HL
 {
 	my $self = shift;	
-    my $l_orig = $self->{L};
-    my $h_orig = $self->{H};
+	my $l_orig = $self->{L};
+	my $h_orig = $self->{H};
 
-    my $sp = get_value($self->{S}, $self->{P});
+	my $sp = get_value($self->{S}, $self->{P});
 
-    $self->{L} = $self->mem_read($sp);
-    $self->{H} = $self->mem_read($sp + 1);
+	$self->{L} = $self->mem_read($sp);
+	$self->{H} = $self->mem_read($sp + 1);
 	$self->tick(1);
 
 	$self->mem_write($sp, $l_orig);
@@ -1111,23 +1115,34 @@ sub
 LD_R_RP
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $r = ($opcode >> 3) & 0x7;
-    my $rp = $opcode & 0x7;
+	my $r = ($opcode >> 3) & 0x7;
+	my $rp = $opcode & 0x7;
 
 	${$self->REG($r)} = ${$self->REG($rp)};
+}
+
+
+sub
+LD_A_BC
+{
+	my $self = shift;
+
+	my ($bc) = get_value($self->{C}, $self->{B});
+
+	$self->{A} = $self->mem_read($bc);
 }
 
 sub
 LD_R_HL
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $r = ($opcode >> 3) & 0x7;
+	my $r = ($opcode >> 3) & 0x7;
 
-    my ($hl) = get_value($self->{L}, $self->{H});
+	my ($hl) = get_value($self->{L}, $self->{H});
 
 	${$self->REG($r)} = $self->mem_read($hl);
 }
@@ -1136,9 +1151,9 @@ sub
 LD_R_N
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $dd = ($opcode >> 3) & 0x7;
+	my $dd = ($opcode >> 3) & 0x7;
 
 	${$self->REG($dd)} = $self->next_pc();
  
@@ -1165,12 +1180,12 @@ LD_A_pNNp
 {
 	my $self = shift;
 
-    my $low = $self->next_pc();
-    my $high = $self->next_pc();
+	my $low = $self->next_pc();
+	my $high = $self->next_pc();
 
-    my $nn = get_value($low, $high);
+	my $nn = get_value($low, $high);
 
-    $self->{A} = $self->mem_read($nn);
+	$self->{A} = $self->mem_read($nn);
 }
 
 sub
@@ -1178,11 +1193,11 @@ LD_NN_A
 {
 	my $self = shift;
 
-    my $low = $self->next_pc();
-    my $high = $self->next_pc();
+	my $low = $self->next_pc();
+	my $high = $self->next_pc();
 
-    my $nn = get_value($low, $high);
-    $self->mem_write($nn, $self->{A});
+	my $nn = get_value($low, $high);
+	$self->mem_write($nn, $self->{A});
 }
 
 
@@ -1190,7 +1205,7 @@ sub
 LD_I_A
 {
 	my $self = shift;
-    $self->{I} = $self->{A};
+	$self->{I} = $self->{A};
 	$self->tick(5);
 }
 
@@ -1198,7 +1213,7 @@ sub
 LD_R_A
 {
 	my $self = shift;
-    $self->{R} = $self->{A};
+	$self->{R} = $self->{A};
 	$self->tick(1);
 }
 
@@ -1227,41 +1242,41 @@ sub
 LD_pHLp_R
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $r = $opcode & 0x7;
-    my $hl = get_value($self->{L}, $self->{H});
+	my $r = $opcode & 0x7;
+	my $hl = get_value($self->{L}, $self->{H});
 
-    $self->mem_write($hl, ${$self->REG($r)});
+	$self->mem_write($hl, ${$self->REG($r)});
 }
 
 sub
 LD_DD_pNNp
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $dd = ($opcode >> 4) & 0x3;
+	my $dd = ($opcode >> 4) & 0x3;
 
-    my $low = $self->next_pc(); 
-    my $high = $self->next_pc();
+	my $low = $self->next_pc(); 
+	my $high = $self->next_pc();
 
-    my $nn = get_value($low, $high);
+	my $nn = get_value($low, $high);
 
-    my $regpair = $self->REGPAIR($dd);
+	my $regpair = $self->REGPAIR($dd);
 
-    ${$regpair->[1]} = $self->mem_read($nn);
-    ${$regpair->[0]} = $self->mem_read($nn + 1);
+	${$regpair->[1]} = $self->mem_read($nn);
+	${$regpair->[0]} = $self->mem_read($nn + 1);
 }
 
 sub
 LD_NN_DD
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $dd = ($opcode >> 4) & 0x3;
-    my $regpair = $self->REGPAIR($dd);
+	my $dd = ($opcode >> 4) & 0x3;
+	my $regpair = $self->REGPAIR($dd);
 
 	my $low = $self->next_pc();
 	my $high = $self->next_pc();
@@ -1276,11 +1291,11 @@ sub
 LD_NN_HL
 {
 	my $self = shift;
-    my $low = $self->next_pc();
-    my $high = $self->next_pc();
+	my $low = $self->next_pc();
+	my $high = $self->next_pc();
 
-    my $nn = get_value($low, $high);
-    my $hl = get_value($self->{L}, $self->{H});
+	my $nn = get_value($low, $high);
+	my $hl = get_value($self->{L}, $self->{H});
 
 	$self->mem_write($nn, $self->{L});
 	$self->mem_write($nn + 1, $self->{H});
@@ -1290,22 +1305,22 @@ sub
 LD_HL_NN
 {
 	my $self = shift;
-    my $low = $self->next_pc();
-    my $high = $self->next_pc();
+	my $low = $self->next_pc();
+	my $high = $self->next_pc();
 
-    my $nn = get_value($low, $high);
+	my $nn = get_value($low, $high);
 
-    $self->{L} = $self->mem_read($nn);
-    $self->{H} = $self->mem_read($nn + 1);
+	$self->{L} = $self->mem_read($nn);
+	$self->{H} = $self->mem_read($nn + 1);
 }
 
 sub
 LD_SP_HL
 {
 	my $self = shift;
-    $self->{P} = $self->{H};
+	$self->{P} = $self->{H};
 	$self->tick(1);
-    $self->{S} = $self->{L};
+	$self->{S} = $self->{L};
 	$self->tick(1);
 }
 
@@ -1313,10 +1328,10 @@ sub
 LD_IY_NN
 {
 	my $self = shift;
-    my $low = $self->next_pc();
-    my $high = $self->next_pc();
+	my $low = $self->next_pc();
+	my $high = $self->next_pc();
 
-    $self->{IY} = get_value($low, $high);
+	$self->{IY} = get_value($low, $high);
 }
 
 sub
@@ -1324,10 +1339,10 @@ LD_IYd_N
 {
 	my $self = shift;
 
-    my $offset = unpack('c', pack('C', $self->next_pc()));
-    my $value = $self->next_pc();
+	my $offset = unpack('c', pack('C', $self->next_pc()));
+	my $value = $self->next_pc();
 
-    my ($loc) = $self->{IY} + $offset;
+	my ($loc) = $self->{IY} + $offset;
 	$self->tick(2);
 	$self->mem_write($loc, $value);
 }
@@ -1336,15 +1351,15 @@ sub
 LD_r_IYd
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $r = ($opcode >> 3) & 0x7;
+	my $r = ($opcode >> 3) & 0x7;
 
-    my $offset = unpack('c', pack('C', $self->next_pc()));
-    my ($loc) = $self->{IY} + $offset;
+	my $offset = unpack('c', pack('C', $self->next_pc()));
+	my ($loc) = $self->{IY} + $offset;
 	$self->tick(5);
 
-    ${$self->REG($r)} = $self->mem_read($loc);
+	${$self->REG($r)} = $self->mem_read($loc);
 }
 
 sub
@@ -1375,7 +1390,7 @@ sub
 LD36
 {
 	my $self = shift;
-    my $addr = get_value($self->{L}, $self->{H});
+	my $addr = get_value($self->{L}, $self->{H});
 
 	my $value = $self->next_pc();
 
@@ -1410,7 +1425,7 @@ DEC_pHLp
 	my ($hl) = get_value($self->{L}, $self->{H});
 
 	my $val = $self->mem_read($hl);
-    	$self->flag("C", 0);
+		$self->flag("C", 0);
 	$self->calculate_sub_flags($val, 1, 8);
 
 	if ($val == 0x80) {
@@ -1428,17 +1443,17 @@ sub
 DEC_IYd
 {
 	my $self = shift;
-    my $offset = unpack('c', pack('C', $self->next_pc()));
+	my $offset = unpack('c', pack('C', $self->next_pc()));
 
 	my $val = $self->mem_read($self->{IY} + $offset);
-    	$self->flag("C", 0);
+		$self->flag("C", 0);
 	$self->calculate_sub_flags($val, 1, 8);
 	$self->tick(2);
 
-    if ($val == 0x80) {
-    	$self->flag("PV", 1);
-    } else {
-    	$self->flag("PV", 0);
+	if ($val == 0x80) {
+		$self->flag("PV", 1);
+	} else {
+		$self->flag("PV", 0);
 	}
 
 	$val = ($val - 1) & 0xff;
@@ -1487,19 +1502,19 @@ sub
 INC_SS
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $ss = ($opcode >> 4) & 0x3;
+	my $ss = ($opcode >> 4) & 0x3;
 
-    my $regpair = $self->REGPAIR($ss);
+	my $regpair = $self->REGPAIR($ss);
 
 	my $high = ${$regpair->[0]};
 	my $low = ${$regpair->[1]};
 
-    my $val = get_value($low, $high);
+	my $val = get_value($low, $high);
 	$self->tick(1);
 
-    set_value($regpair->[1], $regpair->[0], $val + 1);
+	set_value($regpair->[1], $regpair->[0], $val + 1);
 	$self->tick(1);
 }
 
@@ -1507,11 +1522,11 @@ sub
 CP_S
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $s = $opcode & 0x7;
+	my $s = $opcode & 0x7;
 
-    	$self->flag("C", 0);
+		$self->flag("C", 0);
 	$self->calculate_sub_flags($self->{A}, ${$self->REG($s)}, 8);
 }
 
@@ -1523,7 +1538,7 @@ CP_N
 
 	my $n = $self->next_pc();
 
-    	$self->flag("C", 0);
+		$self->flag("C", 0);
 	$self->calculate_sub_flags($self->{A}, $n, 8);
 }
 
@@ -1535,7 +1550,7 @@ CP_HL
 	my $hl = get_value($self->{L}, $self->{H});
 	my $value = $self->mem_read($hl);
 
-    	$self->flag("C", 0);
+		$self->flag("C", 0);
 	$self->calculate_sub_flags($self->{A}, $value, 8);
 }
 
@@ -1544,12 +1559,12 @@ sub
 CP_IYd
 {
 	my $self = shift;
-    my $offset = unpack('c', pack('C', $self->next_pc()));
+	my $offset = unpack('c', pack('C', $self->next_pc()));
 
 	$self->tick(5);
 	my $val = $self->mem_read($self->{IY} + $offset);
 
-    	$self->flag("C", 0);
+		$self->flag("C", 0);
 	$self->calculate_sub_flags($self->{A}, $val, 8);
 }
 
@@ -1566,7 +1581,7 @@ CPIR
 
 	print "Comparing A: $self->{A} with $val\n";
 
-    	$self->flag("C", 0);
+		$self->flag("C", 0);
 	$self->calculate_sub_flags($self->{A}, $val, 8);
 
 	$hl++;
@@ -1622,7 +1637,7 @@ SUB_S
 	my $opcode = shift;
 	my $ss = $opcode & 0x7;
 
-    	$self->flag("C", 0);
+		$self->flag("C", 0);
 	$self->calculate_sub_flags($self->{A}, ${$self->REG($ss)}, 8);
 
 	$self->{A} = $self->{A} - ${$self->REG($ss)};
@@ -1695,7 +1710,7 @@ sub
 ADD_A_n
 {
 	my $self = shift;
-    	my $n = $self->next_pc();
+		my $n = $self->next_pc();
  
 	$self->flag("C", 0);
 	$self->calculate_add_flags($self->{A}, $n, 8);
@@ -1708,7 +1723,7 @@ ADD_A_r
 {
 	my $self = shift;
 	my $opcode = shift;
-    	my $s = $opcode & 0x7;
+		my $s = $opcode & 0x7;
 
 	$self->flag("C", 0);
 	$self->calculate_add_flags($self->{A}, ${$self->REG($s)}, 8);
@@ -1720,19 +1735,19 @@ sub
 AND_S
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $s = $opcode & 0x7;
+	my $s = $opcode & 0x7;
 
-    my $res = ($self->{A} & ${$self->REG($s)}) & 0xFF;
+	my $res = ($self->{A} & ${$self->REG($s)}) & 0xFF;
 
-    $self->{A} = $res;
-    $self->flag("S", ($res >> 7) & 0x1);
+	$self->{A} = $res;
+	$self->flag("S", ($res >> 7) & 0x1);
 
-    if ($res == 0) {
-    	$self->flag("Z", 1);
-    } else {
-    	$self->flag("Z", 0);
+	if ($res == 0) {
+		$self->flag("Z", 1);
+	} else {
+		$self->flag("Z", 0);
 	}
 
 	$self->flag("H", 1);
@@ -1745,17 +1760,17 @@ sub
 AND_n
 {
 	my $self = shift;
-    my $n = $self->next_pc();
+	my $n = $self->next_pc();
 
-    my $res = ($self->{A} & $n) & 0xFF;
+	my $res = ($self->{A} & $n) & 0xFF;
 
-    $self->{A} = $res;
-    $self->flag("S", ($res >> 7) & 0x1);
+	$self->{A} = $res;
+	$self->flag("S", ($res >> 7) & 0x1);
 
-    if ($res == 0) {
-    	$self->flag("Z", 1);
-    } else {
-    	$self->flag("Z", 0);
+	if ($res == 0) {
+		$self->flag("Z", 1);
+	} else {
+		$self->flag("Z", 0);
 	}
 
 	$self->flag("H", 1);
@@ -1768,17 +1783,17 @@ sub
 OR_n
 {
 	my $self = shift;
-    my $n = $self->next_pc();
+	my $n = $self->next_pc();
 
-    my $res = ($self->{A} | $n) & 0xFF;
+	my $res = ($self->{A} | $n) & 0xFF;
 
-    $self->{A} = $res;
-    $self->flag("S", ($res >> 7) & 0x1);
+	$self->{A} = $res;
+	$self->flag("S", ($res >> 7) & 0x1);
 
-    if ($res == 0) {
-    	$self->flag("Z", 1);
-    } else {
-    	$self->flag("Z", 0);
+	if ($res == 0) {
+		$self->flag("Z", 1);
+	} else {
+		$self->flag("Z", 0);
 	}
 
 	$self->flag("H", 0);
@@ -1797,15 +1812,15 @@ OR_pHLp
 
 	my $value = $self->mem_read($hl);
 
-    my $res = ($self->{A} | $value) & 0xFF;
+	my $res = ($self->{A} | $value) & 0xFF;
 
-    $self->{A} = $res;
-    $self->flag("S", ($res >> 7) & 0x1);
+	$self->{A} = $res;
+	$self->flag("S", ($res >> 7) & 0x1);
 
-    if ($res == 0) {
-    	$self->flag("Z", 1);
-    } else {
-    	$self->flag("Z", 0);
+	if ($res == 0) {
+		$self->flag("Z", 1);
+	} else {
+		$self->flag("Z", 0);
 	}
 
 	$self->flag("H", 0);
@@ -1819,64 +1834,64 @@ sub
 OR_S
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $s = $opcode & 0x7;
+	my $s = $opcode & 0x7;
 
-    $self->{A} = ($self->{A} | ${$self->REG($s)}) & 0xFF;
+	$self->{A} = ($self->{A} | ${$self->REG($s)}) & 0xFF;
 
-    $self->flag("Z", 0);
-    if ($self->{A} == 0) {
-    	$self->flag("Z", 1);
-    }
+	$self->flag("Z", 0);
+	if ($self->{A} == 0) {
+		$self->flag("Z", 1);
+	}
 
-    $self->flag("S", ($self->{A} >> 7) & 0x1); 
-    $self->flag("H", 0);
-    $self->flag("PV", calculate_parity($self->{A}, 8));
-    $self->flag("N", 0);
-    $self->flag("C", 0);
+	$self->flag("S", ($self->{A} >> 7) & 0x1); 
+	$self->flag("H", 0);
+	$self->flag("PV", calculate_parity($self->{A}, 8));
+	$self->flag("N", 0);
+	$self->flag("C", 0);
 }
 
 sub
 XOR_S
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $s = $opcode & 0x7;
+	my $s = $opcode & 0x7;
 
-    $self->{A} = ($self->{A} ^ ${$self->REG($s)}) & 0xFF;
+	$self->{A} = ($self->{A} ^ ${$self->REG($s)}) & 0xFF;
 
-    $self->flag("Z", 0);
-    if ($self->{A} == 0) {
-    	$self->flag("Z", 1);
-    }
+	$self->flag("Z", 0);
+	if ($self->{A} == 0) {
+		$self->flag("Z", 1);
+	}
 
-    $self->flag("S", ($self->{A} >> 7) & 0x1); 
-    $self->flag("H", 0);
-    $self->flag("PV", calculate_parity($self->{A}, 8));
-    $self->flag("N", 0);
-    $self->flag("C", 0);
+	$self->flag("S", ($self->{A} >> 7) & 0x1); 
+	$self->flag("H", 0);
+	$self->flag("PV", calculate_parity($self->{A}, 8));
+	$self->flag("N", 0);
+	$self->flag("C", 0);
 }
 
 sub
 XOR_HL
 {
 	my $self = shift;
-    my ($hl) = get_value($self->{L}, $self->{H});
+	my ($hl) = get_value($self->{L}, $self->{H});
 
-    $self->{A} = (($self->{A} ^ $self->mem_read($hl)) & 0xFF);
+	$self->{A} = (($self->{A} ^ $self->mem_read($hl)) & 0xFF);
 
-    $self->flag("Z", 0);
-    if ($self->{A} == 0) {
-    	$self->flag("Z", 1);
-    }
+	$self->flag("Z", 0);
+	if ($self->{A} == 0) {
+		$self->flag("Z", 1);
+	}
 
-    $self->flag("S", ($self->{A} >> 7) & 0x1); 
-    $self->flag("H", 0);
-    $self->flag("PV", calculate_parity($self->{A}, 8));
-    $self->flag("N", 0);
-    $self->flag("C", 0);
+	$self->flag("S", ($self->{A} >> 7) & 0x1); 
+	$self->flag("H", 0);
+	$self->flag("PV", calculate_parity($self->{A}, 8));
+	$self->flag("N", 0);
+	$self->flag("C", 0);
 }
 
 
@@ -1901,9 +1916,9 @@ SET_b_r
 	my $self = shift;
 	my $opcode = shift;
 
-    my $b = ($opcode >> 3) & 0x7;
+	my $b = ($opcode >> 3) & 0x7;
 
-    my $r = $opcode & 0x7;
+	my $r = $opcode & 0x7;
 
 	my $mask = 0x1 << $b;
 
@@ -1932,15 +1947,15 @@ sub
 RES_b_pHLp
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $b = ($opcode >> 3) & 0x7;
+	my $b = ($opcode >> 3) & 0x7;
 
-    my $hl = get_value($self->{L}, $self->{H});
+	my $hl = get_value($self->{L}, $self->{H});
 
 	my $val = $self->mem_read($hl);
 	$self->tick(3);
-    $val = ($val & (~(0x1 << $b))) & 0xFF;
+	$val = ($val & (~(0x1 << $b))) & 0xFF;
 	$self->tick(1);
 	$self->mem_write($hl, $val);
 	$self->tick(3);
@@ -1950,15 +1965,15 @@ sub
 RES_B_IYd
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $bit = (($opcode >> 3) & 0x7);
-    my $mask = 0x1 << $bit;
-    $mask = (~$mask) & 0xFF;
+	my $bit = (($opcode >> 3) & 0x7);
+	my $mask = 0x1 << $bit;
+	$mask = (~$mask) & 0xFF;
 
 	$self->tick(5);
 	my $value = $self->mem_read($self->{IY} + $FDCB_OFFSET);
-    $value &= $mask;
+	$value &= $mask;
 	$self->tick(1);
 	$self->mem_write($self->{IY} + $FDCB_OFFSET, $value);
 }
@@ -1988,10 +2003,10 @@ sub
 BIT_B_IYd
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
 	$self->tick(1);
-    my $bit = (($opcode >> 3) & 0x7);
+	my $bit = (($opcode >> 3) & 0x7);
 
 	my $value = $self->mem_read($self->{IY} + $FDCB_OFFSET);
 
@@ -2014,9 +2029,9 @@ sub
 BIT_HL
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $bit = (($opcode >> 3) & 0x7);
+	my $bit = (($opcode >> 3) & 0x7);
 
 	my $hl = get_value($self->{L}, $self->{H});
 
@@ -2041,15 +2056,15 @@ sub
 SET_B_IYd
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
 	$self->tick(1);
-    my $bit = (($opcode >> 3) & 0x7);
-    my $mask = 0x1 << $bit;
+	my $bit = (($opcode >> 3) & 0x7);
+	my $mask = 0x1 << $bit;
 
 	my $value = $self->mem_read($self->{IY} + $FDCB_OFFSET);
 	$self->tick(1);
-    $value |= $mask;
+	$value |= $mask;
 	$self->mem_write($self->{IY} + $FDCB_OFFSET, $value);
 }
 
@@ -2058,26 +2073,26 @@ JP
 {
 	my $self = shift;
 
-    my $low = $self->next_pc();
-    my $high = $self->next_pc();
+	my $low = $self->next_pc();
+	my $high = $self->next_pc();
 
-    $self->{PC} = ($high << 8) + $low;
+	$self->{PC} = ($high << 8) + $low;
 }
 
 sub
 JP_CC
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $low = $self->next_pc();
-    my $high = $self->next_pc();
+	my $low = $self->next_pc();
+	my $high = $self->next_pc();
 
-    my $cc = ($opcode >> 3) & 0x7;
+	my $cc = ($opcode >> 3) & 0x7;
 
-    if ($self->FLAG_FN($cc)) {
-    	$self->{PC} = ($high << 8) + $low;
-    }
+	if ($self->FLAG_FN($cc)) {
+		$self->{PC} = ($high << 8) + $low;
+	}
 
 }
 
@@ -2086,7 +2101,7 @@ JP_IX
 {
 	my $self = shift;
 
-    $self->{PC} = $self->{IX};
+	$self->{PC} = $self->{IX};
 }
 
 sub
@@ -2096,7 +2111,7 @@ JP_HL
 
 	my $hl = get_value($self->{L}, $self->{H});
 
-    $self->{PC} = $hl;
+	$self->{PC} = $hl;
 }
 
 sub
@@ -2104,9 +2119,9 @@ JR_E
 {
 	my $self = shift;
 
-    my $offset = unpack('c', pack('C', $self->next_pc()));
+	my $offset = unpack('c', pack('C', $self->next_pc()));
 
-    $self->{PC} += $offset;
+	$self->{PC} += $offset;
 	$self->tick(5);
 }
 
@@ -2115,12 +2130,12 @@ JR_NZ_E
 {
 	my $self = shift;
 
-    my $offset = unpack('c', pack('C', $self->next_pc()));
+	my $offset = unpack('c', pack('C', $self->next_pc()));
 
-    if ($self->flag("Z") == 0) {
+	if ($self->flag("Z") == 0) {
 		$self->{PC} += $offset;
 		$self->tick(5);
-    }
+	}
 }
 
 
@@ -2129,36 +2144,36 @@ JR_Z_E
 {
 	my $self = shift;
 
-    my $offset = unpack('c', pack('C', $self->next_pc()));
+	my $offset = unpack('c', pack('C', $self->next_pc()));
 
-    if ($self->flag("Z") != 0) {
+	if ($self->flag("Z") != 0) {
 		$self->{PC} += $offset;
 		$self->tick(5);
-    }
+	}
 }
 
 sub
 JR_C_E
 {
 	my $self = shift;
-    my $offset = unpack('c', pack('C', $self->next_pc()));
+	my $offset = unpack('c', pack('C', $self->next_pc()));
 
-    if ($self->flag("C") == 1) {
+	if ($self->flag("C") == 1) {
 		$self->{PC} += $offset;
 		$self->tick(5);
-    }
+	}
 }
 
 sub
 JR_NC_E
 {
 	my $self = shift;
-    my $offset = unpack('c', pack('C', $self->next_pc()));
+	my $offset = unpack('c', pack('C', $self->next_pc()));
 
-    if ($self->flag("C") == 0) {
+	if ($self->flag("C") == 0) {
 		$self->{PC} += $offset;
 		$self->tick(5);
-    }
+	}
 }
 
 sub
@@ -2166,47 +2181,47 @@ DJNZ_E
 {
 	my $self = shift;
 	$self->tick(1);
-    my $offset = unpack('c', pack('C', $self->next_pc()));
+	my $offset = unpack('c', pack('C', $self->next_pc()));
 
 	$self->{B} = ($self->{B} - 1) & 0xFF;
 
-    if ($self->{B} != 0) {
-        $self->{PC} += $offset;
+	if ($self->{B} != 0) {
+	    $self->{PC} += $offset;
 		$self->tick(5);
-    }
+	}
 }
 
 sub
 RLA
 {
 	my $self = shift;
-    $self->flag("H", 0);
-    $self->flag("N", 0);
+	$self->flag("H", 0);
+	$self->flag("N", 0);
 
-    my ($orig_c) = $self->flag("C");
+	my ($orig_c) = $self->flag("C");
 
-    $self->flag("C", ($self->{A} >> 7) & 0x1);
+	$self->flag("C", ($self->{A} >> 7) & 0x1);
 
-    $self->{A} = (($self->{A} << 1) & 0xFF);
+	$self->{A} = (($self->{A} << 1) & 0xFF);
 
-    if ($orig_c != 0) {
-        $self->{A} |= 0x1;
-    }
+	if ($orig_c != 0) {
+	    $self->{A} |= 0x1;
+	}
 }
 
 sub
 RRA
 {
 	my $self = shift;
-    $self->flag("H", 0);
-    $self->flag("N", 0);
+	$self->flag("H", 0);
+	$self->flag("N", 0);
 
-    my ($new_c) = $self->{A} & 0x1;
-    $self->{A} = (($self->{A} >> 1) & 0xFF);
+	my ($new_c) = $self->{A} & 0x1;
+	$self->{A} = (($self->{A} >> 1) & 0xFF);
 
 	$self->{A} |= ($self->flag("C") << 7);
 
-    $self->flag("C", $new_c);
+	$self->flag("C", $new_c);
 }
 
 
@@ -2214,22 +2229,22 @@ sub
 RLC_r
 {
 	my $self = shift;
-    my $opcode = shift;
+	my $opcode = shift;
 
-    my $r = $opcode & 0x7;
+	my $r = $opcode & 0x7;
 
-    $self->flag("H", 0);
-    $self->flag("N", 0);
+	$self->flag("H", 0);
+	$self->flag("N", 0);
 
-    $self->flag("C", ((${$self->REG($r)} >> 7) & 0x1));
+	$self->flag("C", ((${$self->REG($r)} >> 7) & 0x1));
 
-    ${$self->REG($r)} = ((${$self->REG($r)} << 1) & 0xFF);
+	${$self->REG($r)} = ((${$self->REG($r)} << 1) & 0xFF);
 
 	${$self->REG($r)} |= $self->flag("C");
 
-    $self->flag("S", (${$self->REG($r)} >> 7) & 0x1);
-    $self->flag("Z", ${$self->REG($r)} == 0);
-    $self->flag("PV", calculate_parity(${$self->REG($r)}, 8));
+	$self->flag("S", (${$self->REG($r)} >> 7) & 0x1);
+	$self->flag("Z", ${$self->REG($r)} == 0);
+	$self->flag("PV", calculate_parity(${$self->REG($r)}, 8));
 
 	$self->tick(4);
 }
@@ -2253,7 +2268,7 @@ RL_r
 
 	if ($orig_c != 0) {
 		${$self->REG($r)} |= 0x1;
-    	}
+		}
 
 	${$self->REG($r)} |= $orig_c; 
 
@@ -2295,18 +2310,18 @@ CALL_NN
 {
 	my $self = shift;
 
-    my $low = $self->next_pc();
-    my $high = $self->next_pc();
+	my $low = $self->next_pc();
+	my $high = $self->next_pc();
 
-    my $sp = get_value($self->{S}, $self->{P});
+	my $sp = get_value($self->{S}, $self->{P});
 
 	$self->mem_write(--$sp, ($self->{PC} >> 8) & 0xFF);
 	$self->mem_write(--$sp, $self->{PC} & 0xFF);
 
-    set_value(\$self->{S}, \$self->{P}, $sp);
+	set_value(\$self->{S}, \$self->{P}, $sp);
 	$self->tick(1);
 
-    $self->{PC} = get_value($low, $high);
+	$self->{PC} = get_value($low, $high);
 }
 
 
@@ -2314,23 +2329,23 @@ sub
 CALL_CC
 {
 	my $self = shift;
-    my $opcode = shift;
-    my $cc = ($opcode >> 3) & 0x7;
+	my $opcode = shift;
+	my $cc = ($opcode >> 3) & 0x7;
 
-    my $low = $self->next_pc();
-    my $high = $self->next_pc();
+	my $low = $self->next_pc();
+	my $high = $self->next_pc();
 
-    if ($self->FLAG_FN($cc)) {
+	if ($self->FLAG_FN($cc)) {
 		$self->tick(1);
-    	my $sp = get_value($self->{S}, $self->{P});
+		my $sp = get_value($self->{S}, $self->{P});
 
 		$self->mem_write(--$sp, ($self->{PC} >> 8) & 0xFF);
 		$self->mem_write(--$sp, $self->{PC} & 0xFF);
 
-    	set_value(\$self->{S}, \$self->{P}, $sp);
+		set_value(\$self->{S}, \$self->{P}, $sp);
 
 		$self->{PC} = get_value($low, $high);
-    }
+	}
 
 }
 
@@ -2338,25 +2353,25 @@ sub
 RET
 {
 	my $self = shift;
-    my $sp = get_value($self->{S}, $self->{P});
-    my $low = $self->mem_read($sp++);
-    my $high = $self->mem_read($sp++);
-    set_value(\$self->{S}, \$self->{P}, $sp);
+	my $sp = get_value($self->{S}, $self->{P});
+	my $low = $self->mem_read($sp++);
+	my $high = $self->mem_read($sp++);
+	set_value(\$self->{S}, \$self->{P}, $sp);
 
-    $self->{PC} = get_value($low, $high);
+	$self->{PC} = get_value($low, $high);
 }
 
 sub
 RET_CC
 {
 	my $self = shift;
-    my $opcode = shift;
-    my $cc = ($opcode >> 3) & 0x7;
+	my $opcode = shift;
+	my $cc = ($opcode >> 3) & 0x7;
 
 	$self->tick(1);
-    if ($self->FLAG_FN($cc)) {
-        $self->RET();
-    }
+	if ($self->FLAG_FN($cc)) {
+	    $self->RET();
+	}
 
 }
 
@@ -2364,56 +2379,56 @@ RET_CC
 sub
 POP_IX
 {
-    my $self = shift;
+	my $self = shift;
 
-    my $sp = get_value($self->{S}, $self->{P});
+	my $sp = get_value($self->{S}, $self->{P});
 
 	my $low = $self->mem_read($sp++);
 	my $high = $self->mem_read($sp++);
 
-    $self->{IX} = get_value($low, $high);
+	$self->{IX} = get_value($low, $high);
 
-    set_value(\$self->{S}, \$self->{P}, $sp);
+	set_value(\$self->{S}, \$self->{P}, $sp);
 }
 
 sub
 POP_QQ
 {
-    my $self = shift;
-    my $opcode = shift;
+	my $self = shift;
+	my $opcode = shift;
 
-    my $dd = ($opcode >> 4) & 0x3;
+	my $dd = ($opcode >> 4) & 0x3;
 
-    my $regpair = $self->REGPAIR2($dd);
+	my $regpair = $self->REGPAIR2($dd);
 
-    my $sp = get_value($self->{S}, $self->{P});
+	my $sp = get_value($self->{S}, $self->{P});
 
-    ${$regpair->[1]} = $self->mem_read($sp++);
-    ${$regpair->[0]} = $self->mem_read($sp++);
+	${$regpair->[1]} = $self->mem_read($sp++);
+	${$regpair->[0]} = $self->mem_read($sp++);
 
-    set_value(\$self->{S}, \$self->{P}, $sp);
+	set_value(\$self->{S}, \$self->{P}, $sp);
 }
 
 sub
 PUSH_QQ
 {
-    my $self = shift;
-    my $opcode = shift;
+	my $self = shift;
+	my $opcode = shift;
 
-    my $dd = ($opcode >> 4) & 0x3;
+	my $dd = ($opcode >> 4) & 0x3;
 
-    my $regpair = $self->REGPAIR2($dd);
+	my $regpair = $self->REGPAIR2($dd);
 
-    my $high = ${$regpair->[0]};
-    my $low = ${$regpair->[1]};
+	my $high = ${$regpair->[0]};
+	my $low = ${$regpair->[1]};
 
-    my $sp = get_value($self->{S}, $self->{P});
+	my $sp = get_value($self->{S}, $self->{P});
 
 	$self->mem_write(--$sp, $high);
 	$self->mem_write(--$sp, $low);
 
 	$self->tick(1);
-    set_value(\$self->{S}, \$self->{P}, $sp);
+	set_value(\$self->{S}, \$self->{P}, $sp);
 }
 
 sub
@@ -2432,7 +2447,7 @@ IN_r_C
 	my $self = shift; 
 	my $opcode = shift;
 
-    my $r = ($opcode >> 3) & 0x7;
+	my $r = ($opcode >> 3) & 0x7;
 
 	my $addr = ($self->{B} << 8) | $self->{C};
 
@@ -2522,7 +2537,7 @@ CPL
 {
 	my $self = shift;
 
-    $self->{A} = (~$self->{A}) & 0xFF;
+	$self->{A} = (~$self->{A}) & 0xFF;
 	$self->flag("H", 1);
 	$self->flag("N", 1);
 }
@@ -2547,37 +2562,37 @@ CCF
 sub
 ED
 {
-    my ($self, $code, $bank) = @_;
-    $self->{OPBANK} |= $ED;
+	my ($self, $code, $bank) = @_;
+	$self->{OPBANK} |= $ED;
 }
 
 sub
 FD
 {
-    my ($self, $code, $bank) = @_;
-    $self->{OPBANK} = $FD;
+	my ($self, $code, $bank) = @_;
+	$self->{OPBANK} = $FD;
 }
 
 sub
 CB
 {
-    my ($self, $code, $bank) = @_;
-    $self->{OPBANK} = $CB;
+	my ($self, $code, $bank) = @_;
+	$self->{OPBANK} = $CB;
 }
 
 sub
 DD
 {
-    my ($self, $code, $bank) = @_;
-    $self->{OPBANK} = $DD;
+	my ($self, $code, $bank) = @_;
+	$self->{OPBANK} = $DD;
 }
 
 sub
 FDCB
 {
 	my $self = shift;
-    $self->{OPBANK} = $CB|$FD;
-    $FDCB_OFFSET = unpack('c', pack('C', $self->next_pc()));
+	$self->{OPBANK} = $CB|$FD;
+	$FDCB_OFFSET = unpack('c', pack('C', $self->next_pc()));
 	$self->dec_R();
 }
 
