@@ -116,6 +116,7 @@ my %ED_OP = (
 );
 
 my %FDCB_OP = (
+	0x46 => [\&BIT_B_IYd, "BIT 0, (IY+d)"],
 	0x4E => [\&BIT_B_IYd, "BIT B, (IY+d)"],
 	0x56 => [\&BIT_B_IYd, "BIT 2, (IY+d)"],
 	0x6E => [\&BIT_B_IYd, "BIT 5, (IY+d)"],
@@ -139,6 +140,7 @@ my %CB_OP = (
 	0x46 => [\&BIT_HL, "BIT 0, (HL)"],
 	0x77 => [\&BIT_b_r, "BIT 6, A"],
 	0x7E => [\&BIT_HL, "BIT 7, (HL)"],
+	0x7F => [\&BIT_b_r, "BIT 7, A"],
 	0x86 => [\&RES_b_pHLp,"RES b,(HL)"],
 	0xB6 => [\&RES_b_pHLp,"RES b,(HL)"],
 	0xC6 => [\&SET_b_pHLp,"SET 0,(HL)"],
@@ -170,6 +172,7 @@ my %OP = (
 	0x06 => [\&LD_R_N,"LD B, n"],
 	0x08 => [\&EX_AF_AFp,"EX AF, AF'"],
 	0x09 => [\&ADD_HL_SS,"ADD HL,BC"],
+	0x0A => [\&LD_A_BC,"LD A,(BC)"],
 	0x0C => [\&INC_R,"INC C"],
 	0x0D => [\&DEC8,"DEC C"],
 	0x0E => [\&LD_R_N,"LD C,n"],
@@ -213,6 +216,7 @@ my %OP = (
 	0x42 => [\&LD_R_RP,"LD B,D"],
 	0x44 => [\&LD_R_RP,"LD B,H"],
 	0x46 => [\&LD_R_HL,"LD, B,(HL)"],
+	0x47 => [\&LD_R_RP,"LD B,A"],
 	0x48 => [\&LD_R_RP,"LD C,B"],
 	0x4D => [\&LD_R_RP,"LD C,L"],
 	0x4F => [\&LD_R_RP,"LD C,A"],
@@ -1117,6 +1121,17 @@ LD_R_RP
     my $rp = $opcode & 0x7;
 
 	${$self->REG($r)} = ${$self->REG($rp)};
+}
+
+
+sub
+LD_A_BC
+{
+	my $self = shift;
+
+	my ($bc) = get_value($self->{C}, $self->{B});
+
+	$self->{A} = $self->mem_read($bc);
 }
 
 sub

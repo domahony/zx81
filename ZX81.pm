@@ -436,7 +436,9 @@ read_keyboard_row
 
 	if (!defined $self->{KEY}) {
 		$self->{KEY} = $self->{KEYBOARD}->next_key();
-	} elsif ($cdflag & 0x1) {
+	} elsif ($cdflag & 0x1) { 
+		$self->{KEY} = $self->{KEYBOARD}->next_key();
+	} elsif ($debounce == 0xFF) {
 		$self->{KEY} = $self->{KEYBOARD}->next_key();
 	}
 
