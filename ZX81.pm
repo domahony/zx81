@@ -85,6 +85,9 @@ new
 	$ret->{TV} = $tv;
 	$ret->{KEYBOARD} = $kb;
 
+	$ret->{T0} = time;
+	$ret->{TC} = 0;
+
 	return $ret;
 }
 
@@ -276,6 +279,15 @@ sub
 tick1
 {
 	my $self = shift;
+
+	if (($self->{TC}++ %1000) == 0) {
+		my $now = time;
+		my $tps = 1000/(($now - $self->{T0}) + 1);
+		$self->{T0} = $now;
+		print "TICKS PER SECOND: $tps\n";
+	}
+
+
 	my $cpu = $self->{CPU};
 
 	if (!defined $cpu->{HALT} && defined $cpu->{M1} && defined $cpu->{MREQ}) {
