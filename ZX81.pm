@@ -280,11 +280,13 @@ tick1
 {
 	my $self = shift;
 
-	if (($self->{TC}++ %1000) == 0) {
+	my $sample_size = 10000;
+
+	if (($self->{TC}++ %$sample_size) == 0) {
 		my $now = time;
-		my $tps = 1000/(($now - $self->{T0}) + 1);
-		$self->{T0} = $now;
-		print "TICKS PER SECOND: $tps\n";
+		my $tpms = ($self->{TC}/((($now - $self->{T0})) + 1));
+		my $tps = $tpms * 1000.0;	
+		print "TICKS PER S: $tpms\n";
 	}
 
 
