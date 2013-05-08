@@ -1,8 +1,5 @@
 #!/usr/bin/perl -w
 
-# The display2 method routine (L023E) should exit at the RET Z line if there was a key pressed (I think)
-# Should return to the CALL L0207 after L0413
-
 package ZX81;
 
 use strict;
@@ -50,13 +47,7 @@ tick
 sub
 start
 {
-	#my $self = shift;
 	glutMainLoop();
-
-	#while (1) {
-		#$self->{CPU}->run();
-	#}
-
 }
 
 sub
@@ -496,13 +487,6 @@ read_keyboard_row
 		}
 
 	}
-
-
-	#} elsif ($cdflag & 0x1) { 
-	#	$self->{KEY} = $self->{KEYBOARD}->next_key();
-	#} elsif ($debounce == 0xFF) {
-	#	$self->{KEY} = $self->{KEYBOARD}->next_key();
-	#}
 
 	my $ret;
 	if (defined $self->{KEY}) {
