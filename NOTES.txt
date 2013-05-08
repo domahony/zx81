@@ -1,4 +1,17 @@
 
+May 7, 2013
+
+I think the keyboard doesn't get stuck anymore. 
+I don't think the buffering is working waiting during the 'debounce' though.
+
+Not bothering with speed as of now.
+It seems I can get 12MHz max from perl in a simple no-op loop.  
+Performance drops significantly when functions are called.
+
+I need 3.25MHz for this, but it currently runs at 80KHz.
+
+I'll look at it later.
+
 May 6, 2013
 
 Better keyboard reading.  Still seems to lose keystrokes if you try and 

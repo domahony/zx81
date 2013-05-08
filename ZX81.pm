@@ -50,7 +50,13 @@ tick
 sub
 start
 {
+	#my $self = shift;
 	glutMainLoop();
+
+	#while (1) {
+		#$self->{CPU}->run();
+	#}
+
 }
 
 sub
@@ -85,7 +91,7 @@ new
 	$ret->{TV} = $tv;
 	$ret->{KEYBOARD} = $kb;
 
-	$ret->{T0} = time;
+	$ret->{T0} = time - 1;
 	$ret->{TC} = 0;
 
 	return $ret;
@@ -280,15 +286,12 @@ tick1
 {
 	my $self = shift;
 
-	my $sample_size = 10000;
+	my $sample_size = 100000;
 
 	if (($self->{TC}++ %$sample_size) == 0) {
-		my $now = time;
-		my $tpms = ($self->{TC}/((($now - $self->{T0})) + 1));
-		my $tps = $tpms * 1000.0;	
-		print "TICKS PER S: $tpms\n";
+		my $tps = $self->{TC}/(time - $self->{T0});
+		print "TICKS PER S: $tps\n";
 	}
-
 
 	my $cpu = $self->{CPU};
 
@@ -445,16 +448,61 @@ read_keyboard_row
 	my $self = shift;
 	my $row = shift;
 
+	# got a key
+	# keep returning the same key until the key is recognized and 
+	# debounce returns to 0 
+
 	my $cdflag = $self->read_memory(0x403B);
 	my $debounce = $self->read_memory(0x4027);
 
 	if (!defined $self->{KEY}) {
-		$self->{KEY} = $self->{KEYBOARD}->next_key();
-	} elsif ($cdflag & 0x1) { 
-		$self->{KEY} = $self->{KEYBOARD}->next_key();
-	} elsif ($debounce == 0xFF) {
-		$self->{KEY} = $self->{KEYBOARD}->next_key();
+
+		# read the next key
+		my $k = $self->{KEYBOARD}->next_key();
+		if (defined $k) {
+			print "KEYBOARD: GOT KEY\n";
+			$self->{KEY} = $k; 
+			$self->{WAIT_FOR_DB_FF} = 1;
+		} else {
+			$self->{KEY} = undef;
+		}
+
+	} elsif (defined $self->{WAIT_FOR_DB_FF}) {
+
+		# wait for debounce of FF - keep returning current key
+		if ($debounce == 0xFF) {
+			$self->{WAIT_FOR_DB_00} = 1;
+			$self->{WAIT_FOR_DB_FF} = undef;
+			$self->{KEY} = undef;
+		}
+		
+	} elsif (defined $self->{WAIT_FOR_DB_00}) {
+
+		# wait for debounce of 00 - keep returning {no key} 
+		if ($debounce == 0x0) {
+			$self->{WAIT_FOR_DB_00} = undef;
+		}
+		return 0x1F;
+
+	} else {
+
+		my $k = $self->{KEYBOARD}->next_key();
+		if (defined $k) {
+			print "KEYBOARD: GOT KEY (2)\n";
+			$self->{KEY} = $k; 
+			$self->{WAIT_FOR_DB_FF} = 1;
+		} else {
+			$self->{KEY} = undef;
+		}
+
 	}
+
+
+	#} elsif ($cdflag & 0x1) { 
+	#	$self->{KEY} = $self->{KEYBOARD}->next_key();
+	#} elsif ($debounce == 0xFF) {
+	#	$self->{KEY} = $self->{KEYBOARD}->next_key();
+	#}
 
 	my $ret;
 	if (defined $self->{KEY}) {
