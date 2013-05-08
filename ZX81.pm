@@ -439,68 +439,45 @@ read_keyboard_row
 	my $self = shift;
 	my $row = shift;
 
-	# got a key
-	# keep returning the same key until the key is recognized and 
-	# debounce returns to 0 
-
 	my $cdflag = $self->read_memory(0x403B);
 	my $debounce = $self->read_memory(0x4027);
 
-	if (!defined $self->{KEY}) {
-
-		# read the next key
-		my $k = $self->{KEYBOARD}->next_key();
-		if (defined $k) {
-			print "KEYBOARD: GOT KEY\n";
-			$self->{KEY} = $k; 
-			$self->{WAIT_FOR_DB_FF} = 1;
-		} else {
-			$self->{KEY} = undef;
-		}
-
-	} elsif (defined $self->{WAIT_FOR_DB_FF}) {
-
-		# wait for debounce of FF - keep returning current key
+	my $ret;
+	if (defined $self->{WAIT_FOR_DB_FF}) {
+		print "KEYBOARD: Waiting for debounce to be FF\n";
 		if ($debounce == 0xFF) {
+			print "KEYBOARD: Debounce is FF\n";
 			$self->{WAIT_FOR_DB_00} = 1;
 			$self->{WAIT_FOR_DB_FF} = undef;
-			$self->{KEY} = undef;
 		}
-		
-	} elsif (defined $self->{WAIT_FOR_DB_00}) {
+		$ret = $self->{KEY}->{$row};
+		return $ret;
+	}
+
+	} if (defined $self->{WAIT_FOR_DB_00}) {
 
 		# wait for debounce of 00 - keep returning {no key} 
+		print "KEYBOARD: Waiting for debounce to be 00\n";
 		if ($debounce == 0x0) {
+			print "KEYBOARD: Debounce is 00\n";
 			$self->{WAIT_FOR_DB_00} = undef;
 		}
-		return 0x1F;
-
-	} else {
-
-		my $k = $self->{KEYBOARD}->next_key();
-		if (defined $k) {
-			print "KEYBOARD: GOT KEY (2)\n";
-			$self->{KEY} = $k; 
-			$self->{WAIT_FOR_DB_FF} = 1;
-		} else {
-			$self->{KEY} = undef;
-		}
-
+		$ret =  0x1F;
+		return $ret;
 	}
 
-	my $ret;
-	if (defined $self->{KEY}) {
-		$self->{KEYBOARD}->print($self->{KEY});
+	my $k = $self->{KEYBOARD}->next_key();
+	print "KEYBOARD: Checking for next key\n";
+	if (defined $k) {
+		print "KEYBOARD: GOT KEY A NEW KEY\n";
+		$self->{KEY} = $k; 
+		$self->{WAIT_FOR_DB_FF} = 1;
 		$ret = $self->{KEY}->{$row};
 	} else {
+		print "KEYBOARD: NO NEW KEY\n";
+		$self->{KEY} = undef;
 		$ret = 0x1F;
 	}
-
-
-	print "EXECUTING KEY ROW: " .
-		 sprintf("0x%02x", $row) . " " .
-		sprintf("0x%02x", $ret) . 
-	"\n";
 
 	return $ret;
 }
