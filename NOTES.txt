@@ -1,4 +1,10 @@
 
+May 8, 2013
+Better keyboard support.
+Supports shift keys and continuous typing.
+Still doesn't work before you type before the cursor displays.
+There is a bug where it attempts to read non existent memeory
+
 May 7, 2013
 
 I think the keyboard doesn't get stuck anymore. 

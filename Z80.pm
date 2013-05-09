@@ -139,6 +139,7 @@ my %CB_OP = (
 	0x3B => [\&SRL_E,"SRL E"],
 	0x46 => [\&BIT_HL, "BIT 0, (HL)"],
 	0x77 => [\&BIT_b_r, "BIT 6, A"],
+	0x78 => [\&BIT_b_r, "BIT 7, B"],
 	0x7E => [\&BIT_HL, "BIT 7, (HL)"],
 	0x7F => [\&BIT_b_r, "BIT 7, A"],
 	0x86 => [\&RES_b_pHLp,"RES b,(HL)"],
@@ -802,7 +803,7 @@ get_value
 	my ($l, $h) = @_;
 
 	if (!defined $h) {
-	    exit;
+	    die "get_value h not defined\n";
 	}
 
 	return ($h << 8) | $l;
@@ -970,7 +971,7 @@ calculate_sub_flags
 {
 	my ($self, $a, $b, $WIDTH) = @_;
 
-	exit unless defined $b;
+	die "calculate_sub_flags b not defined\n" unless defined $b;
 
 	my $MASK = 0;
 	for (1 .. $WIDTH) {
@@ -983,13 +984,13 @@ calculate_sub_flags
 	if (!looks_like_number($b)) {
 		$self->show_mem();
 		print "$b is not a number!!\n";
-		exit;
+		die "calculate_sub_flags b not a number\n";
 	}
 	if (!looks_like_number(~(0+$b))) {
 		$self->show_mem();
 		my $str = sprintf("%04x", ~(0+$b));
 		print "$str is not a number ($b)!!\n";
-		exit;
+		die "$str is not a number ($b)!!\n";
 	}
 
 	my $res = ($a - $b - $self->flag("C")) & 0xFF;

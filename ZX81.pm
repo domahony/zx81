@@ -35,6 +35,7 @@ my %ZX81 = (
 	HBLANK => undef,
 	HDISPLAY => undef,
 	HRETRACE => undef,
+	WAIT_FOR_DB_00 => 1,
 );
 
 sub
@@ -150,7 +151,7 @@ read_memory
 	my $addr = shift;
 
 	if (!defined $addr) {
-		exit;
+		die "Trying to read read memory not defined!!\n";
 	}
 
 	my $a = $self->get_memory_array($addr);
@@ -327,7 +328,7 @@ tick1
 			print "Reading MEM: " . sprintf("0x%02x", $cpu->ADDRESS_BUS);
 		}
 
-		exit unless defined $self->read_memory($cpu->ADDRESS_BUS);
+		die "Cant read memory at $cpu->ADDRESS_BUS\n"  unless defined $self->read_memory($cpu->ADDRESS_BUS);
 
 		if (0) {
 			print " " . sprintf("0x%02x", 
@@ -450,11 +451,16 @@ read_keyboard_row
 			$self->{WAIT_FOR_DB_00} = 1;
 			$self->{WAIT_FOR_DB_FF} = undef;
 		}
-		$ret = $self->{KEY}->{$row};
+
+		if (!defined $self->{KEY}) {
+			$ret = 0x1F;
+		} else {
+			$ret = $self->{KEY}->{$row};
+		}
 		return $ret;
 	}
 
-	} if (defined $self->{WAIT_FOR_DB_00}) {
+	if (defined $self->{WAIT_FOR_DB_00}) {
 
 		# wait for debounce of 00 - keep returning {no key} 
 		print "KEYBOARD: Waiting for debounce to be 00\n";
@@ -473,6 +479,7 @@ read_keyboard_row
 		$self->{KEY} = $k; 
 		$self->{WAIT_FOR_DB_FF} = 1;
 		$ret = $self->{KEY}->{$row};
+		$self->{KEYBOARD}->print($k);
 	} else {
 		print "KEYBOARD: NO NEW KEY\n";
 		$self->{KEY} = undef;
