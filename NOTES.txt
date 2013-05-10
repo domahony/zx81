@@ -1,4 +1,9 @@
 
+May 9, 2013
+
+No progress on the bug.
+Start tracing forward from the last K-DECODE routine call (L04df).
+
 May 8, 2013
 Better keyboard support.
 Supports shift keys and continuous typing.
