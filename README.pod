@@ -2,17 +2,30 @@
 
 =head1 ZX81 Emulator
 
-This is a ZX81 emulator written in perl.  It consists of 4 main components
+This is a ZX81 emulator written in perl.  It consists of 4 main components.
 
 =over
 
-=item 1 ZX81.pm The ZX81 emulator. 
+=item 1 Z80.pm The Z80 CPU emulator.
 
-=item 2 Z80.pm The Z80 CPU emulator.
+This module emulates the Z80 CPU.  It contains variables for the Z80 registers and executes operations based on the received input. 
 
-=item 3 TV.pm The display module. 
+The C<run()> subroutine is continuously called by an external driver.
 
-=item 4 Keyboard.pm The keyboard module. 
+The supplied C<tick()> subroutine is called on each cpu cycle.
+
+=item 2 TV.pm The display module. 
+
+This module is responsible for emulating the display. It uses L<OpenGL> to render the screen.  An external controller calls the C<vert()>, C<horiz()>, and C<data()> methods to simulate a television.
+
+
+=item 3 Keyboard.pm The keyboard module. 
+
+This module is responsible for listening for keyboard input.  The C<next_key()> method returns a structure that reflects the keystroke. 
+
+=item 4 ZX81.pm The ZX81 emulator. 
+
+This module is the main ZX81 controller.  It contains the RAM and ROM.
 
 =back
 
