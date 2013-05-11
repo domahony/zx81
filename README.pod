@@ -6,7 +6,13 @@ This is a ZX81 emulator written in perl.  It consists of 4 main components
 
 =over
 
-=item 1
+=item 1 ZX81.pm The ZX81 emulator. 
+
+=item 2 Z80.pm The Z80 CPU emulator.
+
+=item 3 TV.pm The display module. 
+
+=item 4 Keyboard.pm The keyboard module. 
 
 =back
 
