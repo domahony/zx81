@@ -1,3 +1,15 @@
 =pod
 
 =head1 ZX81 Emulator
+
+This is a ZX81 emulator written in perl.  It consists of 4 main components
+
+=over
+
+=item 1
+
+=back
+
+=cut
+
+
