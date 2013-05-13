@@ -1,4 +1,14 @@
 
+May 12, 2013
+
+At line L095d all the characters have been printed (I think).
+Why is WRITE-N/L at L0847 being called?
+
+May 11, 2013
+
+At last instance of L0a46 0 is loaded into HL from 4039.  This seems to be 
+a problem.
+
 May 9, 2013
 
 No progress on the bug.

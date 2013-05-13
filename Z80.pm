@@ -283,7 +283,7 @@ my %OP = (
 	0xC8 => [\&RET_CC,"RET Z"],
 	0xC9 => [\&RET,"RET"],
 	0xCB => [\&CB,"**** CB ****"],
-	0xCC => [\&CALL_CC,"CALL M, CC"],
+	0xCC => [\&CALL_CC,"CALL Z, CC"],
 	0xCD => [\&CALL_NN,"CALL (nn)"],
 	0xD0 => [\&RET_CC,"RET NC"],
 	0xD1 => [\&POP_QQ,"POP DE"],
@@ -806,6 +806,9 @@ get_value
 	    die "get_value h not defined\n";
 	}
 
+	$l &= 0xff;
+	$h &= 0xff;
+
 	return ($h << 8) | $l;
 }
 
@@ -1311,8 +1314,23 @@ LD_HL_NN
 
 	my $nn = get_value($low, $high);
 
+	print sprintf("YYYYY: LOW n: %02x HIGH n: %02x Value: %04x\n", $low, $high, $nn);
+
 	$self->{L} = $self->mem_read($nn);
 	$self->{H} = $self->mem_read($nn + 1);
+
+	print sprintf("YYYYY: READ low: %02x from %04x\n", $self->{L}, $nn);
+	print sprintf("YYYYY: READ high: %02x from %04x\n", $self->{H}, $nn + 1);
+
+	my $val = get_value($self->{L}, $self->{H});
+	print "YYYY LOW: " . $self->{L} . "\n";
+	print "YYYY HIGH: " . $self->{H} . "\n";
+	print "YYYY NN: " . $nn . "\n";
+	print "YYYY VAL: " . $val . "\n";
+
+	print sprintf("YYYYY: NN: %04x VAL: %04x\n", $nn, $val);
+
+	die if ($nn == 0x4010 && $val == 0x0);
 }
 
 sub
@@ -1582,8 +1600,11 @@ CPIR
 
 	print "Comparing A: $self->{A} with $val\n";
 
-		$self->flag("C", 0);
+	my $c = $self->flag("C");
+	$self->flag("C", 0);
 	$self->calculate_sub_flags($self->{A}, $val, 8);
+	$self->flag("C", $c);
+	$self->flag("N", 1);
 
 	$hl++;
 	set_value(\$self->{L}, \$self->{H}, $hl);
@@ -1971,6 +1992,9 @@ RES_B_IYd
 	my $bit = (($opcode >> 3) & 0x7);
 	my $mask = 0x1 << $bit;
 	$mask = (~$mask) & 0xFF;
+
+	my $addr = $self->{IY} + $FDCB_OFFSET;
+	print "Using IY + FDCB_OFFSET of " . sprintf("%04x\n", $addr);
 
 	$self->tick(5);
 	my $value = $self->mem_read($self->{IY} + $FDCB_OFFSET);

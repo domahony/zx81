@@ -166,6 +166,10 @@ write_memory
 	my $addr = shift;
 	my $value = shift;
 
+	if ($addr == 0x4010) {
+		$self->dump_ram("mem4010");
+	}
+
 	my $a = $self->get_memory_array($addr);
 
 	$a->[$addr] = $value;
@@ -324,14 +328,14 @@ tick1
 
 	if (defined $cpu->{RD} && defined $cpu->{MREQ}) {
 
-		if (0) {
-			print "Reading MEM: " . sprintf("0x%02x", $cpu->ADDRESS_BUS);
+		if (1) {
+			print "Reading MEM: " . sprintf("0x%08x", $cpu->ADDRESS_BUS);
 		}
 
 		die "Cant read memory at $cpu->ADDRESS_BUS\n"  unless defined $self->read_memory($cpu->ADDRESS_BUS);
 
-		if (0) {
-			print " " . sprintf("0x%02x", 
+		if (1) {
+			print " " . sprintf("0x%08x", 
 				$self->read_memory($cpu->ADDRESS_BUS)) . "\n";
 		}
 
@@ -342,8 +346,8 @@ tick1
 	if (defined $cpu->{WR} && defined $cpu->{IORQ}) {
 
 		if (0) {
-			print "Writing: " . sprintf("0x%02x", $cpu->DATA_BUS);
-			print " to " . sprintf("0x%04x", $cpu->ADDRESS_BUS) . "\n";
+			print "Writing: " . sprintf("0x%08x", $cpu->DATA_BUS);
+			print " to " . sprintf("0x%08x", $cpu->ADDRESS_BUS) . "\n";
 		}
 
 		$self->terminate_vertical_retrace();
@@ -384,9 +388,9 @@ tick1
 	}
 
 	if (defined $cpu->{WR} && defined $cpu->{MREQ}) {
-		if (0) {
-			print "Writing: " . sprintf("0x%02x", $cpu->DATA_BUS);
-			print " to " . sprintf("0x%04x", $cpu->ADDRESS_BUS) . "\n";
+		if (1) {
+			print "Writing: " . sprintf("0x%08x", $cpu->DATA_BUS);
+			print " to " . sprintf("0x%08x", $cpu->ADDRESS_BUS) . "\n";
 		}
 
 		$self->write_memory($cpu->ADDRESS_BUS, $cpu->DATA_BUS);
