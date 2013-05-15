@@ -1,4 +1,23 @@
 
+May 15, 2013
+
+Bug was related to using logical and (&&) instead of bitwise and (&) in a
+couple of places.
+
+May 14, 2013
+
+L-MODE is set on L0556.
+Figure out what happends between the last L0927 and the next NOP.
+The current op file contains the PRINT keyword.  The cursor should change
+to L after this keyword.
+L-mode gets set after PRINT - look to see where the cursor routine is 
+called again to see what goes wrong.
+
+
+May 13, 2013
+
+L04d4 is where LAST_K is loaded into BC
+
 May 12, 2013
 
 At line L095d all the characters have been printed (I think).

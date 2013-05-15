@@ -117,7 +117,7 @@ my %ED_OP = (
 
 my %FDCB_OP = (
 	0x46 => [\&BIT_B_IYd, "BIT 0, (IY+d)"],
-	0x4E => [\&BIT_B_IYd, "BIT B, (IY+d)"],
+	0x4E => [\&BIT_B_IYd, "BIT 1, (IY+d)"],
 	0x56 => [\&BIT_B_IYd, "BIT 2, (IY+d)"],
 	0x6E => [\&BIT_B_IYd, "BIT 5, (IY+d)"],
 	0x7E => [\&BIT_B_IYd, "BIT 7, (IY+d)"],
@@ -2035,7 +2035,7 @@ BIT_B_IYd
 
 	my $value = $self->mem_read($self->{IY} + $FDCB_OFFSET);
 
-	my $v = ($value >> $bit) && 0x1;
+	my $v = ($value >> $bit) & 0x1;
 
 	if ($v == 1) {
 		$self->flag("Z", 0);
@@ -2063,7 +2063,7 @@ BIT_HL
 	my $value = $self->mem_read($hl);
 	$self->tick(1);
 
-	my $v = ($value >> $bit) && 0x1;
+	my $v = ($value >> $bit) & 0x1;
 
 	if ($v == 1) {
 		$self->flag("Z", 0);
