@@ -1,4 +1,11 @@
 
+May 16, 2013
+
+Implemented many more missing opcodes.
+
+The PRINT 2+2 operation runs to completion.  However the output doesn't 
+appear in the correctd place on the screen.
+
 May 15, 2013
 
 Bug was related to using logical and (&&) instead of bitwise and (&) in a
