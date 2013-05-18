@@ -1,4 +1,16 @@
 
+May 17, 2013
+
+Implemented a few more opcodes.
+
+Screen doesn't display correctly.  Probably a bug in the TV module.
+
+Examining the memory, it seems it's writing 0 at the top of the screen, when
+the addition should produce 4.
+
+Also, the 0 doesn't draw at the top of the TV (more in the middle) again,
+probably a bug in the TV Module.
+
 May 16, 2013
 
 Implemented many more missing opcodes.
