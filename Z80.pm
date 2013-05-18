@@ -130,6 +130,7 @@ my %FDCB_OP = (
 	0x8E => [\&RES_B_IYd, "RES 1, (IY+d)"],
 	0x96 => [\&RES_B_IYd, "RES 2, (IY+d)"],
 	0xAE => [\&RES_B_IYd, "RES 5, (IY+d)"],
+	0xB6 => [\&RES_B_IYd, "RES 6, (IY+d)"],
 	0xC6 => [\&SET_B_IYd, "SET 0, (IY+d)"],
 	0xD6 => [\&SET_B_IYd, "SET 2, (IY+d)"],
 	0xF6 => [\&SET_B_IYd, "SET 6, (IY+d)"],
@@ -210,6 +211,7 @@ my %OP = (
 	0x18 => [\&JR_E,"JR e"],
 	0x19 => [\&ADD_HL_SS,"ADD HL,DE"],
 	0x1A => [\&LD_A_DE,"LD A,(DE)"],
+	0x1B => [\&DEC16,"DEC DE"],
 	0x1C => [\&INC_R,"INC E"],
 	0x1E => [\&LD_R_N,"LD E,n"],
 	0x1F => [\&RRA,"RRA"],
@@ -349,6 +351,7 @@ my %OP = (
 	0xEA => [\&JP_CC,"JP PE, CC"],
 	0xEB => [\&EX_DE_HL,"EX DE,HL"],
 	0xED => [\&ED,"**** ED ****"],
+	0xEE => [\&XOR_n,"XOR n"],
 	0xEF => [\&RST,"RST 0x0028"],
 	0xF1 => [\&POP_QQ,"POP AF"],
 	0xF2 => [\&JP_CC,"JP P, CC"],
@@ -2087,6 +2090,26 @@ OR_S
 	my $s = $opcode & 0x7;
 
 	$self->{A} = ($self->{A} | ${$self->REG($s)}) & 0xFF;
+
+	$self->flag("Z", 0);
+	if ($self->{A} == 0) {
+		$self->flag("Z", 1);
+	}
+
+	$self->flag("S", ($self->{A} >> 7) & 0x1); 
+	$self->flag("H", 0);
+	$self->flag("PV", calculate_parity($self->{A}, 8));
+	$self->flag("N", 0);
+	$self->flag("C", 0);
+}
+
+sub
+XOR_n
+{
+	my $self = shift;
+	my $val = $self->next_pc();
+
+	$self->{A} = ($self->{A} ^ $val) & 0xFF;
 
 	$self->flag("Z", 0);
 	if ($self->{A} == 0) {
