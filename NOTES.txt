@@ -5,6 +5,8 @@ Need to update the tick() flow, so that the tick() callback takes a number of
 cycles to execute argument.  The spinning can be optimized a little in the
 callback.
 
+Added the DAA opcode.  It needs to be verified.
+
 May 17, 2013
 
 Implemented a few more opcodes.
