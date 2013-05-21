@@ -525,7 +525,7 @@ execute_video
 	my $cpu = shift;
 	my $code = $self->read_memory($cpu->ADDRESS_BUS & 0x7FFF);
 
-	#print "Testing Code: " . sprintf("0x%02x", $code) . "\n";
+	print "VIDEO: Testing Code: " . sprintf("0x%02x", $code) . "\n";
 
 	if ((($code >> 6) & 0x1) == 0x1) {
 		$cpu->DATA_BUS($code);
