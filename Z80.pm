@@ -101,6 +101,7 @@ my %DD_OP = (
 my %ED_OP = (
 	0x42 => [\&SBC_HL_SS, "SBC HL, BC"],
 	0x43 => [\&LD_NN_DD, "LD (nn), BC"],
+	0x44 => [\&NEG, "NEG"],
 	0x47 => [\&LD_I_A, "LD I, A"],
 	0x4A => [\&ADC_HL_SS, "ADC HL, BC"],
 	0x4B => [\&LD_DD_pNNp, "LD BC, (nn)"],
@@ -108,9 +109,12 @@ my %ED_OP = (
 	0x52 => [\&SBC_HL_SS, "SBC HL, DE"],
 	0x53 => [\&LD_NN_DD, "LD (nn), DE"],
 	0x56 => [\&IM_1, "IM 1"],
+	0x5A => [\&ADC_HL_SS, "ADC HL, DE"],
 	0x5B => [\&LD_DD_pNNp, "LD DE, (nn)"],
 	0x5F => [\&LD_A_R, "LD A,R"],
 	#0x3B => [\&SRL_m,"SRL E"],
+	0x62 => [\&SBC_HL_SS, "SBC HL, HL"],
+	0x6A => [\&ADC_HL_SS, "ADC HL, HL"],
 	0x72 => [\&SBC_HL_SS, "SBC HL, SP"],
 	0x78 => [\&IN_r_C, "IN A, (C)"],
 	0x7B => [\&LD_DD_pNNp, "LD BC, (nn)"],
@@ -140,13 +144,19 @@ my %FDCB_OP = (
 my %CB_OP = (
 	0x00 => [\&RLC_r, "RLC B"],
 	0x10 => [\&RL_r, "RL B"],
+	0x11 => [\&RL_r, "RL C"],
 	0x12 => [\&RL_r, "RL D"],
 	0x13 => [\&RL_r, "RL E"],
 	0x14 => [\&RL_r, "RL H"],
 	0x16 => [\&RL_HL, "RL (HL)"],
+	0x18 => [\&RR_r, "RR B"],
 	0x19 => [\&RR_r, "RR C"],
 	0x1A => [\&RR_r, "RR D"],
+	0x1B => [\&RR_r, "RR E"],
+	0x1C => [\&RR_r, "RR H"],
+	0x1D => [\&RR_r, "RR L"],
 	0x21 => [\&SLA_m, "SLA C"],
+	0x27 => [\&SLA_m, "SLA A"],
 	0x28 => [\&SRA_m, "SRA B"],
 	0x2D => [\&SRA_m, "SRA L"],
 	0x38 => [\&SRL_m,"SRL B"],
@@ -162,9 +172,12 @@ my %CB_OP = (
 	0x7F => [\&BIT_b_r, "BIT 7, A"],
 	0x86 => [\&RES_b_pHLp,"RES b,(HL)"],
 	0xB6 => [\&RES_b_pHLp,"RES b,(HL)"],
+	0xBE => [\&RES_b_pHLp,"RES 7,(HL)"],
 	0xC6 => [\&SET_b_pHLp,"SET 0,(HL)"],
 	0xD9 => [\&SET_b_r,"SET b,C"],
 	0xF6 => [\&SET_b_pHLp,"SET 6,(HL)"],
+	0xF7 => [\&SET_b_r,"SET 6,A"],
+	0xF8 => [\&SET_b_r,"SET 7,B"],
 	0xFC => [\&SET_b_r,"SET 7,H"],
 	0xFE => [\&SET_b_pHLp,"SET b,(HL)"],
 	0xFF => [\&SET_b_r,"SET 7,A"],
@@ -205,6 +218,7 @@ my %OP = (
 	0x11 => ["LD_DD_NN","LD DE, nn"],
 	0x12 => [\&LD12,"LD (DE), A"],
 	0x13 => [\&INC_SS,"INC DE"],
+	0x14 => [\&INC_R,"INC D"],
 	0x15 => [\&DEC8,"DEC D"],
 	0x16 => [\&LD_R_N,"LD D, n"],
 	0x17 => [\&RLA,"RLA"],
@@ -213,6 +227,7 @@ my %OP = (
 	0x1A => [\&LD_A_DE,"LD A,(DE)"],
 	0x1B => [\&DEC16,"DEC DE"],
 	0x1C => [\&INC_R,"INC E"],
+	0x1D => [\&DEC8,"DEC E"],
 	0x1E => [\&LD_R_N,"LD E,n"],
 	0x1F => [\&RRA,"RRA"],
 	0x20 => [\&JR_NZ_E,"JR NZ, (nn)"],
@@ -221,6 +236,7 @@ my %OP = (
 	0x23 => [\&INC_SS,"INC HL"],
 	0x25 => [\&DEC8,"DEC H"],
 	0x26 => [\&LD_R_N,"LD H,n"],
+	0x27 => [\&DAA,"DAA"],
 	0x28 => [\&JR_Z_E,"JR Z,e"],
 	0x29 => [\&ADD_HL_SS,"ADD HL,HL"],
 	0x2A => [\&LD_HL_NN,"LD HL, (nn)"],
@@ -245,19 +261,25 @@ my %OP = (
 	0x40 => [\&LD_R_RP,"LD B,B"],
 	0x41 => [\&LD_R_RP,"LD B,C"],
 	0x42 => [\&LD_R_RP,"LD B,D"],
+	0x43 => [\&LD_R_RP,"LD B,E"],
 	0x44 => [\&LD_R_RP,"LD B,H"],
 	0x46 => [\&LD_R_HL,"LD, B,(HL)"],
 	0x47 => [\&LD_R_RP,"LD B,A"],
 	0x48 => [\&LD_R_RP,"LD C,B"],
+	0x4A => [\&LD_R_RP,"LD C,D"],
 	0x4D => [\&LD_R_RP,"LD C,L"],
 	0x4E => [\&LD_R_HL,"LD, C,(HL)"],
 	0x4F => [\&LD_R_RP,"LD C,A"],
+	0x50 => [\&LD_R_RP,"LD D,B"],
 	0x51 => [\&LD_R_RP,"LD D,C"],
+	0x52 => [\&LD_R_RP,"LD D,D"],
+	0x53 => [\&LD_R_RP,"LD D,E"],
 	0x54 => [\&LD_R_RP,"LD D,H"],
 	0x55 => [\&LD_R_RP,"LD D,L"],
 	0x56 => [\&LD_R_HL,"LD, D,(HL)"],
 	0x57 => [\&LD_R_RP,"LD D,A"],
 	0x58 => [\&LD_R_RP,"LD E,B"],
+	0x59 => [\&LD_R_RP,"LD E,C"],
 	0x5D => [\&LD_R_RP,"LD E,L"],
 	0x5E => [\&LD_R_HL,"LD, E,(HL)"],
 	0x5F => [\&LD_R_RP,"LD E,A"],
@@ -332,6 +354,7 @@ my %OP = (
 	0xCF => [\&RST,"RST 0x0008"],
 	0xD0 => [\&RET_CC,"RET NC"],
 	0xD1 => [\&POP_QQ,"POP DE"],
+	0xD2 => [\&JP_CC,"JP NC, CC"],
 	0xD3 => ["OUT","OUT (n), A"],
 	0xD5 => [\&PUSH_QQ,"PUSH DE"],
 	0xDD => [\&DD,"**** DD ****"],
@@ -340,6 +363,7 @@ my %OP = (
 	0xD8 => [\&RET_CC,"RET C"],
 	0xD9 => [\&EXX,"EXX"],
 	0xDA => [\&JP_CC,"JP C, CC"],
+	0xDC => [\&CALL_CC,"CALL C, CC"],
 	0xDF => [\&RST,"RST 0x0018"],
 	0xE0 => [\&RET_CC,"RET PO"],
 	0xE1 => [\&POP_QQ,"POP HL"],
@@ -347,12 +371,14 @@ my %OP = (
 	0xE5 => [\&PUSH_QQ,"PUSH HL"],
 	0xE6 => [\&AND_n,"AND n"],
 	0xE7 => [\&RST,"RST 0x0020"],
+	0xE8 => [\&RET_CC,"RET PE"],
 	0xE9 => [\&JP_HL,"JP (HL)"],
 	0xEA => [\&JP_CC,"JP PE, CC"],
 	0xEB => [\&EX_DE_HL,"EX DE,HL"],
 	0xED => [\&ED,"**** ED ****"],
 	0xEE => [\&XOR_n,"XOR n"],
 	0xEF => [\&RST,"RST 0x0028"],
+	0xF0 => [\&RET_CC,"RET P"],
 	0xF1 => [\&POP_QQ,"POP AF"],
 	0xF2 => [\&JP_CC,"JP P, CC"],
 	0xF5 => [\&PUSH_QQ,"PUSH AF"],
@@ -1650,6 +1676,156 @@ CP_N
 }
 
 sub
+DAA
+{
+	my $self = shift;
+
+	my $upper = ($self->{A} >> 4) & 0xF;
+	my $lower = ($self->{A}) & 0xF;
+
+	my $n = 0;
+	my $c = 0;
+
+	if ($self->flag("N") == 0) {
+
+		if ($self->flag("C") == 0) {
+
+			if ($self->flag("H") == 0) {
+
+				if (between($upper, 0, 9) 
+				&& between($lower, 0, 9))
+				{
+					$n = 0x0;			
+					$c = 0;
+				}
+
+				elsif (between($upper, 0, 8) 
+				&& between($lower, 0xA, 0xF))
+				{
+					$n = 0x6;
+					$c = 0;
+				}
+
+				elsif (between($upper, 0xA, 0xF) 
+				&& between($lower, 0, 9))
+				{
+					$n = 0x60;
+					$c = 1;
+				}
+
+				elsif (between($upper, 0x9, 0xF) 
+				&& between($lower, 0xA, 0xF))
+				{
+					$n = 0x66;
+					$c = 1;
+				}
+
+			} else {
+
+				if (between($upper, 0, 9) 
+				&& between($lower, 0, 3))
+				{
+					$n = 0x6;
+					$c = 0;
+				}
+
+				elsif (between($upper, 0xA, 0xF) 
+				&& between($lower, 0, 3))
+				{
+					$n = 0x66;
+					$c = 1;
+				}
+
+			}
+
+		} else {
+
+			if ($self->flag("H") == 0) {
+
+				if (between($upper, 0, 2) 
+				&& between($lower, 0, 9))
+				{
+					$n = 0x60;		
+					$c = 1;
+				}
+
+				elsif (between($upper, 0, 2) 
+				&& between($lower, 0xA, 0xF))
+				{
+					$n = 0x66;
+					$c = 1;
+				}
+
+			} else {
+
+				if (between($upper, 0x0, 0x3) 
+				&& between($lower, 0x0, 0x3))
+				{
+					$n = 0x66;
+					$c = 1;
+				}
+
+			}
+
+		}
+
+	} else {
+
+		if ($self->flag("C") == 0) {
+
+			if ($self->flag("H") == 0) {
+
+				if (between($upper, 0, 9) 
+				&& between($lower, 0, 9))
+				{
+					$n = 0x0;			
+					$c = 0;
+				}
+
+			} else {
+
+				if (between($upper, 0, 8) 
+				&& between($lower, 6, 0xF))
+				{
+					$n = 0xFA;
+					$c = 0;
+				}
+
+			}
+
+		} else {
+
+			if ($self->flag("H") == 0) {
+
+				if (between($upper, 0x7, 0xF) 
+				&& between($lower, 0x0, 0x9))
+				{
+					$n = 0xA0;
+					$c = 1;
+				}
+
+			} else {
+
+				if (between($upper, 0x6, 0x7) 
+				&& between($lower, 0x6, 0xF))
+				{
+					$n = 0x9A;
+					$c = 1;
+				}
+
+			}
+		}
+	}
+
+	$self->{A} += $n;
+
+	$self->flag("S", ($self->{A} >> 7) & 0x1); 
+	$self->flag("Z", ($self->{A} == 0)); 
+	$self->flag("PV", calculate_parity($self->{A}, 8));
+	$self->flag("C", $c);
+}
+
+sub
 SUB_N
 {
 	my $self = shift;
@@ -2909,6 +3085,22 @@ CPL
 	$self->flag("N", 1);
 }
 
+sub
+NEG
+{
+	my $self = shift;
+
+	my $pv = ($self->{A} == 0x80);
+	my $c = ($self->{A} == 0x0);
+
+	$self->{A} = (0 - $self->{A}) & 0xFF;
+
+	$self->flag("C", 0);
+	$self->calculate_sub_flags(0, $self->{A}, 8);
+
+	$self->flag("PV", $pv);
+	$self->flag("C", $c);
+}
 
 sub
 CCF
@@ -2962,6 +3154,19 @@ FDCB
 	$FDCB_OFFSET = unpack('c', pack('C', $self->next_pc()));
 	$self->dec_R();
 }
+
+sub
+between
+{
+	my ($n, $l, $h) = @_;
+
+	if ($n >= $l && $n <= $h) {
+		return 1;
+	}	
+
+	return 0;
+}
+
 
 
 1;
