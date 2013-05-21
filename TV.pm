@@ -56,8 +56,8 @@ new
 
 	my $ret = bless $self, $class;
 
-	my $width = 32 * 8 * $ret->{PW};
-	my $height = (24 + 4 + 4) * 8 * $ret->{PH};
+	my $width = (32 + 10) * 8 * $ret->{PW};
+	my $height = (24 + 4 + 4 + 10) * 8 * $ret->{PH};
 
 	glutInitWindowSize($width, $height);
 	glutCreateWindow("ZX81");
@@ -73,6 +73,8 @@ horiz
 	$self->{Y} += $self->{PH};
 	$self->{X} = 0;
 
+	print "VIDEO HORIZ: $self->{X} $self->{Y}\n";
+
 	if (defined $self->{RENDER}) {
 		$self->{RENDER} = undef;
 		glutPostRedisplay();
@@ -85,10 +87,10 @@ vert
 	my $self = shift;
 	$self->{Y} = 0; 
 	$self->{X} = 0;
+	$self->{VERTS}->assign(0, @{$self->{DATA}});
 	$self->{DATA} = [];
 	$self->{VERTS}->assign(0, @{$self->{DATA}});
-	#print "Setting X: " . $self->{X} . "\n";
-	#print "Setting Y: " . $self->{Y} . "\n";
+	print "VIDEO VERT: $self->{X} $self->{Y}\n";
 }
 
 sub
