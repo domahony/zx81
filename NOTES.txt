@@ -1,4 +1,16 @@
 
+May 22, 2013
+
+The redraw issues after executing a command may be related to timing issues.  Need to review all
+the opcodes executed after that for timing accuracy.
+
+Need to seriously consider reworking the flow so that the tick() fn is called much, much less.
+
+Brainstorming:
+Can I read everything needed to execute an opcode at once?  And execute a "multi-tick" after...
+Can the 'glutIdle' function perform more work per call?
+
+
 May 20, 2013 
 I think I need to explicitly clear the screen at each vertical retrace.
 Need to update the tick() flow, so that the tick() callback takes a number of
