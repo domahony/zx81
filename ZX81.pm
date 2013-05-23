@@ -166,10 +166,6 @@ write_memory
 	my $addr = shift;
 	my $value = shift;
 
-	if ($addr == 0x4010) {
-		$self->dump_ram("mem4010");
-	}
-
 	my $a = $self->get_memory_array($addr);
 
 	$a->[$addr] = $value;
@@ -297,24 +293,6 @@ tick1
 			print "Reading OP: " . sprintf("0x%02x", $cpu->ADDRESS_BUS);
 			print " " . sprintf("0x%02x", 
 				$self->read_memory($cpu->ADDRESS_BUS)) . "\n";
-		}
-
-		#the problem appears after L0419 in the call at L0433
-
-		if (1 && $cpu->ADDRESS_BUS == 0x023e) {
-			$self->dump_ram("mem.bin.0x023e");
-		}
-
-		if (0 && $cpu->ADDRESS_BUS == 0x0846) {
-			$self->dump_ram("mem.bin.0x0846");
-		}
-
-		if (0 && $cpu->ADDRESS_BUS == 0x079d) {
-			$self->dump_ram("mem.bin.0x079d");
-		}
-
-		if (0 && $cpu->ADDRESS_BUS == 0x003e) {
-			$self->dump_ram("mem.bin.0x003e");
 		}
 
 		if (($cpu->ADDRESS_BUS >> 15) && 0x1) {

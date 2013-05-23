@@ -460,9 +460,9 @@ new {
 
 sub 
 run {
-
 	my $self = shift;
 
+	for (1 .. 1000) {
 
 	$self->{OP} = new OpcodeLogger($self);
 
@@ -473,13 +473,14 @@ run {
 		$self->execute($opcode);
 	}
 
-	if (1 || ($self->{PC} >= 0x02BB && $self->{PC} < 0x02e7))  {
+	if (0 || ($self->{PC} >= 0x02BB && $self->{PC} < 0x02e7))  {
 		my $op = $self->{OP}->to_string($self->{tick_count}, $self->{R});
 		print "$op\n";
 		$self->show_mem();
 	}
 
 	$self->int_delay();
+	}
 }
 
 
@@ -1059,9 +1060,6 @@ calculate_sub_flags
 	    $MASK = ($MASK << 1) | 0x1;
 	}
 
-	print "MASK $MASK\n";
-
-	
 	if (!looks_like_number($b)) {
 		$self->show_mem();
 		print "$b is not a number!!\n";
@@ -1101,8 +1099,6 @@ calculate_add_flags
 	for (1 .. $WIDTH) {
 	    $MASK = ($MASK << 1) | 0x1;
 	}
-
-	#print sprintf("MASK: %04x\n", $MASK);
 
 	if ($self->{F} & $CMASK) {
 	    $carry = 1 if ($a >= $MASK - $b);
