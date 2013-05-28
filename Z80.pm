@@ -473,7 +473,7 @@ run {
 		$self->execute($opcode);
 	}
 
-	if (0 || ($self->{PC} >= 0x02BB && $self->{PC} < 0x02e7))  {
+	if (1 || ($self->{PC} >= 0x02BB && $self->{PC} < 0x02e7))  {
 		my $op = $self->{OP}->to_string($self->{tick_count}, $self->{R});
 		print "$op\n";
 		$self->show_mem();
@@ -3076,7 +3076,7 @@ CPL
 {
 	my $self = shift;
 
-	$self->{A} = (~$self->{A}) & 0xFF;
+	$self->{A} = (~(0+$self->{A})) & 0xFF;
 	$self->flag("H", 1);
 	$self->flag("N", 1);
 }
