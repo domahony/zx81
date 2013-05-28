@@ -1,4 +1,14 @@
 
+May 27, 2013
+Still attempting to debug why 'PRINT 2' prints 2E-8.
+L1595 routine may be mistranslating a number?
+The variable assignment LET A=2 results in an unimplemented opcode, if I can't 
+solve the above bug I might move on to that problem. 
+
+May 23, 2013
+Attempting to debug why 'PRINT 2' prints 2E-8
+The PRINT command is executed at L0ACF
+
 May 22, 2013
 
 The redraw issues after executing a command may be related to timing issues.  Need to review all
