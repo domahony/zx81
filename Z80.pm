@@ -163,6 +163,7 @@ my %CB_OP = (
 	0x3B => [\&SRL_m,"SRL E"],
 	0x46 => [\&BIT_HL, "BIT 0, (HL)"],
 	0x6E => [\&BIT_HL, "BIT 5, (HL)"],
+	0x70 => [\&BIT_b_r, "BIT 6, B"],
 	0x77 => [\&BIT_b_r, "BIT 6, A"],
 	0x78 => [\&BIT_b_r, "BIT 7, B"],
 	0x79 => [\&BIT_b_r, "BIT 7, C"],
@@ -170,11 +171,15 @@ my %CB_OP = (
 	0x7B => [\&BIT_b_r, "BIT 7, E"],
 	0x7E => [\&BIT_HL, "BIT 7, (HL)"],
 	0x7F => [\&BIT_b_r, "BIT 7, A"],
-	0x86 => [\&RES_b_pHLp,"RES b,(HL)"],
-	0xB6 => [\&RES_b_pHLp,"RES b,(HL)"],
+	0x86 => [\&RES_b_pHLp,"RES 0,(HL)"],
+	0xA9 => [\&RES_b_r, "RES 5, C"],
+	0xB6 => [\&RES_b_pHLp,"RES 6,(HL)"],
 	0xBE => [\&RES_b_pHLp,"RES 7,(HL)"],
 	0xC6 => [\&SET_b_pHLp,"SET 0,(HL)"],
-	0xD9 => [\&SET_b_r,"SET b,C"],
+	0xD9 => [\&SET_b_r,"SET 3,C"],
+	0xE8 => [\&SET_b_r,"SET 5,B"],
+	0xE9 => [\&SET_b_r,"SET 5,C"],
+	0xF1 => [\&SET_b_r,"SET 6,C"],
 	0xF6 => [\&SET_b_pHLp,"SET 6,(HL)"],
 	0xF7 => [\&SET_b_r,"SET 6,A"],
 	0xF8 => [\&SET_b_r,"SET 7,B"],
@@ -333,6 +338,7 @@ my %OP = (
 	0xB5 => [\&OR_S,"OR L"],
 	0xB6 => [\&OR_pHLp,"OR (HL)"],
 	0xB8 => [\&CP_S,"CP B"],
+	0xB9 => [\&CP_S,"CP C"],
 	0xBA => [\&CP_S,"CP D"],
 	0xBC => [\&CP_S,"CP H"],
 	0xBE => [\&CP_HL,"CP (HL)"],
@@ -2366,6 +2372,21 @@ SET_b_r
 	my $mask = 0x1 << $b;
 
 	${$self->REG($r)} |= $mask;
+}
+
+sub
+RES_b_r
+{
+	my $self = shift;
+	my $opcode = shift;
+
+	my $b = ($opcode >> 3) & 0x7;
+
+	my $r = $opcode & 0x7;
+
+	my $mask = (~(0x1 << $b)) & 0xFF;
+
+	${$self->REG($r)} &= $mask;
 }
 
 sub
