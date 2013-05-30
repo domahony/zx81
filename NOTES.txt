@@ -1,4 +1,7 @@
 
+May 29, 2013
+Filling in more opcodes.
+
 May 28, 2013
 Filling in opcodes getting LET A=2 statement to work.
 
