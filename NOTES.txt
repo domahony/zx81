@@ -1,5 +1,12 @@
 
 May 29, 2013
+Filled in another opcode.
+Still many issues.
+Slowness. 
+Last line doesn't display correctly after executing something.
+Displays 2E-8 for the integer 2.
+
+May 29, 2013
 Filling in more opcodes.
 
 May 28, 2013

@@ -175,6 +175,7 @@ my %CB_OP = (
 	0x7F => [\&BIT_b_r, "BIT 7, A"],
 	0x86 => [\&RES_b_pHLp,"RES 0,(HL)"],
 	0xA9 => [\&RES_b_r, "RES 5, C"],
+	0xB1 => [\&RES_b_r, "RES 6, C"],
 	0xB6 => [\&RES_b_pHLp,"RES 6,(HL)"],
 	0xBE => [\&RES_b_pHLp,"RES 7,(HL)"],
 	0xC6 => [\&SET_b_pHLp,"SET 0,(HL)"],
