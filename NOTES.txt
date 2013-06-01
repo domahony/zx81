@@ -1,4 +1,10 @@
 
+June 1, 2013
+Dedicated effort to solve the 2E-8 problem.
+Sift through the PRINT command to find the problem.
+Follow the complete ROM Dissammbly PDF for better descriptions of the routines.
+Currently at the "SCANNING" routine (L0b31).
+
 May 29, 2013
 Filled in another opcode.
 Still many issues.
