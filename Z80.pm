@@ -2137,7 +2137,7 @@ AND_S
 	}
 
 	$self->flag("H", 1);
-	$self->flag("PV", 0);
+	$self->flag("PV", calculate_parity($self->{A}, 8));
 	$self->flag("N", 0);
 	$self->flag("C", 0);
 }
