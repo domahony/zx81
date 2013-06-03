@@ -1,5 +1,25 @@
 
 June 1, 2013
+PRINT 2 trace:
+L0acf (PRINT)
+L0afa (NOT-AT)
+L0b31 (NOT-TAB)
+L0F55 (SCANNING)
+L0018 RST 18 (GET-CH) loads a with 1E ("2")
+L0F59 S-RND
+L0F8c S-PI
+L0f9d S-INKEY$
+L0fb2 S-ALPHNUM
+L1025 S-LET-NUM
+L1047 S-DECIMAL
+L14d9 DEC-TO-FP
+L1548 INT-TO-FP
+L0028 RST 28 FP-CALC
+L19a8 CALCULATE
+L1B85 STK-PNTRS
+Everything seems OK up to the JP P, 19C2 line.  (L19bb)
+
+June 1, 2013
 Dedicated effort to solve the 2E-8 problem.
 Sift through the PRINT command to find the problem.
 Follow the complete ROM Dissammbly PDF for better descriptions of the routines.
