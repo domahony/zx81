@@ -17,7 +17,18 @@ L1548 INT-TO-FP
 L0028 RST 28 FP-CALC
 L19a8 CALCULATE
 L1B85 STK-PNTRS
-Everything seems OK up to the JP P, 19C2 line.  (L19bb)
+L19c2 FIRST-38 
+L19ce DOUBLE-A
+L002b END-CALC
+L15c9 FBC-END in middle of routine
+L15d9 FP-A-END (the POP AF resets the ZERO flag)
+L165b SIGND-EXP
+L165f GET-FST-2 (not sure why this routine gets called so much in the loop at JR Z, 165f)
+L1682 E-NEEDED - This is not correct at this point. The JP M or is not right.
+
+
+
+Everything seems OK up to the JR 1920, L19cd line.
 
 June 1, 2013
 Dedicated effort to solve the 2E-8 problem.
