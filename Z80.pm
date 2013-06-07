@@ -3116,10 +3116,10 @@ NEG
 	my $pv = ($self->{A} == 0x80);
 	my $c = ($self->{A} == 0x0);
 
-	$self->{A} = (0 - $self->{A}) & 0xFF;
-
 	$self->flag("C", 0);
 	$self->calculate_sub_flags(0, $self->{A}, 8);
+
+	$self->{A} = (0 - $self->{A}) & 0xFF;
 
 	$self->flag("PV", $pv);
 	$self->flag("C", $c);
