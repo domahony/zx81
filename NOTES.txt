@@ -1,4 +1,13 @@
 
+June 17, 2013
+Working backwards from the previous trace analysis:
+At L165b LD E,A A should hold the 'n', but it holds 0. 
+
+Continuing to work backward, at L15d0, when the previous 
+subroutine ends (FT-TO-BC) I assume the 'last value' should be in A, but
+A contains 0 (should be 2).
+
+
 June 1, 2013
 PRINT 2 trace:
 L0acf (PRINT)
