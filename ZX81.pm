@@ -137,7 +137,7 @@ get_memory_array
 	my $self = shift;
 	my $addr = shift;
 
-	if ((($addr >> 14) & 0x1) == 0) {
+	if (($addr >> 14) == 0) {
 		return $self->{PROG};
 	}
 
