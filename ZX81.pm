@@ -483,6 +483,7 @@ terminate_vertical_retrace
 
 			$self->{vblank} = 0;
 			$self->{vdisplay} = 0;
+	$self->{LINECNTR} = 0;
 }
 
 sub
